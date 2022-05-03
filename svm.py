@@ -4,12 +4,17 @@ import threading
 
 class SequentialSVM:
 
-    def __init__(self, learning_rate=1e-3, regularization_parameter=1e-2, tolerance=1e-6, max_num_iterations=1000):
+    def __init__(self, learning_rate=1e-3, regularization_parameter=1e-2, tolerance=1e-6, max_num_iterations=1000,
+                 n_nonlinear_features=None):
         self.lr = learning_rate
         self.reg = regularization_parameter
         self.tol = tolerance
         self.n_max = max_num_iterations
+        self.m = n_nonlinear_features
         self.w = None
+        if self.m:
+            self.omega = None
+            self.b = None
 
     def _init_weights(self, X):
         _, n_features = X.shape
@@ -27,10 +32,26 @@ class SequentialSVM:
         # update w
         self.w -= self.lr * dw
 
+    def _update_random_variables(self, d):
+        sigma = 1
+        self.omega = 1 / sigma * np.random.randn(d, self.m)
+        self.b = 2 * np.pi * np.random.rand(self.m)
+
+    def _non_linear_features(self, X):
+        n_samples, _ = X.shape
+        X_new = np.zeros(n_samples, self.m)
+        for i, x in enumerate(X):
+            X_new[i, :] = np.sqrt(2 / self.m) * \
+                          np.array([np.cos(self.omega[:, i] * x + self.b[i]) for i in range(self.m)])
+        return X_new
+
     def fit(self, X, y):
+        n_samples, n_features = X.shape
+        if self.m:
+            self._update_random_variables(n_features)
+            X = self._non_linear_features(X)
 
         # incorporate bias term b into features X
-        n_samples, n_features = X.shape
         b = np.ones((n_samples, 1))
         X = np.concatenate((X, b), axis=1)
 
