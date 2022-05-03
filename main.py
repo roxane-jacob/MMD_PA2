@@ -7,7 +7,7 @@ from sklearn.svm import SVC
 import time
 
 from utils import two_dim_visualization
-from svm import LinearSVM, LinearSVMParallel
+from svm import LinearSequentialSVM, LinearParallelSVM, RFF_SVM
 
 if __name__ == '__main__':
 
@@ -29,26 +29,39 @@ if __name__ == '__main__':
     # set parameters
     learning_rate = 1e-1
     regularization = 1e-2
-    n = 2  # number of machines
-    print(f'Learning rate: {learning_rate} \nRegularization: {regularization} \nNumber of machines: {n}')
+    num_threads = 2  # number of machines
+    print(f'Learning rate: {learning_rate} \nRegularization: {regularization} \nNumber of threads: {num_threads}')
 
-    # fit and predict linear non-parallel
+    # fit and predict linear sequential
     print('\n--- Linear Sequential SVM ---')
     start = time.time()
-    linear_sgd = LinearSVM(learning_rate, regularization)
-    y_predicted = linear_sgd.fit_predict(X, y)
+    linear_sequential_svm = LinearSequentialSVM(learning_rate, regularization)
+    linear_sequential_svm.fit(X_train, y_train)
+    y_predicted = linear_sequential_svm.predict(X_test)
     end = time.time()
-    print("Elapsed time fit/predict:", end - start)
-    print("Accuracy: {}".format(accuracy_score(y, y_predicted)))
+    print("Runtime fit and predict:", end - start)
+    print("Accuracy: {}".format(accuracy_score(y_test, y_predicted)))
 
     # fit and predict linear parallel
     print('\n--- Linear Parallel SVM ---')
     start = time.time()
-    linear_sgd = LinearSVMParallel(learning_rate, regularization)
-    y_predicted = linear_sgd.fit_predict(X, y, n)
+    linear_parallel_svm = LinearParallelSVM(learning_rate, regularization, num_threads)
+    linear_parallel_svm.fit(X_train, y_train)
+    y_predicted = linear_parallel_svm.predict(X_test)
     end = time.time()
-    print("Elapsed time fit/predict:", end - start)
+    print("Runtime fit and predict::", end - start)
+    print("Accuracy: {}".format(accuracy_score(y_test, y_predicted)))
+
+    """
+    # fit and predict rff sequential
+    print('\n--- Linear Sequential SVM ---')
+    start = time.time()
+    rff_svm = RFF_SVM(learning_rate, regularization)
+    y_predicted = rff_svm.fit_predict(X, y)
+    end = time.time()
+    print("Runtime fit and predict::", end - start)
     print("Accuracy: {}".format(accuracy_score(y, y_predicted)))
+    """
 
     # fit and predict sklearn SVC
     print('\n--- Sklearn SVC ---')
