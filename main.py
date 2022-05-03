@@ -7,7 +7,7 @@ from sklearn.svm import SVC
 import time
 
 from utils import two_dim_visualization
-from svm import LinearSequentialSVM, LinearParallelSVM, RFF_SVM
+from svm import LinearSequentialSVM, LinearParallelSVM, RFFSequentialSVM
 
 if __name__ == '__main__':
 
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     # set parameters
     learning_rate = 1e-1
     regularization = 1e-2
-    num_threads = 2  # number of machines
+    num_threads = 2
     print(f'Learning rate: {learning_rate} \nRegularization: {regularization} \nNumber of threads: {num_threads}')
 
     # fit and predict linear sequential
@@ -51,18 +51,17 @@ if __name__ == '__main__':
     end = time.time()
     print("Runtime fit and predict::", end - start)
     print("Accuracy: {}".format(accuracy_score(y_test, y_predicted)))
-
     """
     # fit and predict rff sequential
-    print('\n--- Linear Sequential SVM ---')
+    print('\n--- RFF Sequential SVM ---')
     start = time.time()
-    rff_svm = RFF_SVM(learning_rate, regularization)
-    y_predicted = rff_svm.fit_predict(X, y)
+    rff_sequential_svm = RFFSequentialSVM(learning_rate, regularization)
+    rff_sequential_svm.fit(X_train, y_train)
+    y_predicted = rff_sequential_svm.predict(X_test)
     end = time.time()
-    print("Runtime fit and predict::", end - start)
-    print("Accuracy: {}".format(accuracy_score(y, y_predicted)))
+    print("Runtime fit and predict:", end - start)
+    print("Accuracy: {}".format(accuracy_score(y_test, y_predicted)))
     """
-
     # fit and predict sklearn SVC
     print('\n--- Sklearn SVC ---')
     start = time.time()
@@ -74,6 +73,6 @@ if __name__ == '__main__':
     print("Accuracy: {}".format(accuracy_score(y_test, y_predicted)))
 
     # Plot true labels
-    # two_dim_visualization(X_PCA, y, 'True Labels', 'true')
+    # two_dim_visualization(X, y, 'True Labels', 'true')
     # Plot predicted labels
-    # two_dim_visualization(X_PCA, y_predicted, 'Predicted Labels', 'predicted')
+    # two_dim_visualization(X, y_predicted, 'Predicted Labels', 'predicted')

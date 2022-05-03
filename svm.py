@@ -129,7 +129,7 @@ class LinearParallelSVM:
 
 
 class Laplacian:
-    def __init__(self, sigma):
+    def __init__(self, sigma=1):
         self.sigma = sigma
 
     def get_sigma(self):
@@ -137,57 +137,73 @@ class Laplacian:
 
     def sample_rffs(self, d):
         omega = 1 / self.get_sigma() * np.random.standard_cauchy(d)
-        b = 2 * np.pi * np.random.rand(d)
-        return omega, b
+        beta = 2 * np.pi * np.random.rand(d)
+        return omega, beta
 
 
-class RFF_SVM:
+class RFFSequentialSVM:
 
-    def __init__(self, learning_rate, regularization_parameter):
+    def __init__(self, learning_rate=1e-3, regularization_parameter=1e-2, tolerance=1e-6, max_num_iterations=1000):
         self.lr = learning_rate
         self.reg = regularization_parameter
+        self.tol = tolerance
+        self.n_max = max_num_iterations
         self.w = None
 
     def _init_weights(self, X):
         _, n_features = X.shape
         self.w = np.zeros(n_features)
 
-    def _classify(self, x):
-        label = np.sign(np.dot(x, self.w))
-        if label == 0:
-            label = 1
-        return label
+    def _get_weights(self):
+        return self.w
 
-    def _update_weights(self, x, y, t):
-        if y * np.dot(x, self.w) < 1:
-            # w = self.w - ((1/np.sqrt(t+1)) * -np.dot(y, x))
-            w = self.w - (self.lr * -np.dot(y, x))
-            self.w = w * min(1, (1 / np.linalg.norm(w)) * (1 / np.sqrt(self.reg)))
+    def _update_weights(self, x, y):
+        # compute gradient
+        if y * np.dot(x, self.w) >= 1:
+            dw = self.reg * self.w
+        else:
+            dw = self.reg * self.w - np.dot(y, x)
+        # update w
+        self.w -= self.lr * dw
 
-    def fit_predict(self, X, y):
+    def fit(self, X, y):
+
         # incorporate bias term b into features X
         n_samples, n_features = X.shape
         b = np.ones((n_samples, 1))
         X = np.concatenate((X, b), axis=1)
 
-        self._init_weights(X)  # initialize w0
-        predictions = np.zeros_like(y)  # initialize array for predicted labels
-        k = Laplacian(sigma=1)  # initialize kernel
+        k = Laplacian()
+        d = 20
+        omega, beta = k.sample_rffs(d)
+        zx = np.zeros_like(omega)
+        zy = np.zeros_like(omega)
 
-        # generate kernel approximation
-        d = 200
-        omega, b = k.sample_rffs(d)
-        k_approx = np.zeros_like(X)
-        for i, Y in zip(range(len(k_approx)), X):
-            x = 0
-            zx = np.sqrt(2) / np.sqrt(d) * np.cos(omega * x + b)
-            zy = np.sqrt(2) / np.sqrt(d) * np.cos(np.dot(omega, Y) + b)
-            k_approx[i] = np.dot(zx, zy)
+        for i, x in enumerate(X):
+            zx[i] = np.sqrt(2) * np.cos(np.dot(omega[i], x) + beta[i])
+            zy[i] = np.sqrt(2) * np.cos(np.dot(omega[i], 0) + beta[i])
 
-        for t, x in enumerate(X):
-            # classify x according to sign(wTx)
-            predictions[t] = self._classify(x)
-            # update w based on (x,y)
-            self._update_weights(x, y[t], t)
+        zx = zx / np.sqrt(d)
+        zy = zy / np.sqrt(d)
 
-        return predictions
+        k_approx = np.dot(zx, zy)
+
+        self._init_weights(k_approx)
+
+        for _ in range(self.n_max):
+            old_w = self._get_weights()
+            for idx, x in enumerate(X):
+                self._update_weights(x, y[idx])
+            diff = old_w - self.w
+            if np.linalg.norm(diff, 1) < self.tol:
+                break
+
+    def predict(self, X):
+
+        # incorporate bias term b into features X
+        n_samples, n_features = X.shape
+        b = np.ones((n_samples, 1))
+        X = np.concatenate((X, b), axis=1)
+
+        prediction = np.sign(np.dot(X, self.w)).astype(int)
+        return prediction
