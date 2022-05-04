@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 import time
 
-from svm import SequentialSVM, ParallelSVM
+from svm import SequentialSVM, ParallelSVM, NonLinearFeatures
 from utils import two_dim_visualization
 
 if __name__ == '__main__':
@@ -20,6 +20,14 @@ if __name__ == '__main__':
     # scale features
     scaler = StandardScaler()
     X = scaler.fit_transform(X)
+
+    # Create non-linear features
+    start = time.time()
+    nlf = NonLinearFeatures(m=20, sigma=2.0)
+    X = nlf.fit_transform(X)
+    end = time.time()
+    print(f'Runtime transformation to non-linear features: {end-start}')
+
 
     # train/test split
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
@@ -41,7 +49,7 @@ if __name__ == '__main__':
     # fit and predict linear sequential
     print('\n--- Linear Sequential SVM ---')
     start = time.time()
-    linear_sequential_svm = SequentialSVM(learning_rate, regularization, n_nonlinear_features=20)
+    linear_sequential_svm = SequentialSVM(learning_rate, regularization)
     linear_sequential_svm.fit(X_train, y_train)
     y_predicted_linear_sequential = linear_sequential_svm.predict(X_test)
     end = time.time()
@@ -51,7 +59,7 @@ if __name__ == '__main__':
     # fit and predict linear parallel
     print('\n--- Linear Parallel SVM ---')
     start = time.time()
-    linear_parallel_svm = ParallelSVM(learning_rate, regularization, num_threads, n_nonlinear_features=20)
+    linear_parallel_svm = ParallelSVM(learning_rate, regularization, num_threads)
     linear_parallel_svm.fit(X_train, y_train)
     y_predicted_linear_parallel = linear_parallel_svm.predict(X_test)
     end = time.time()
