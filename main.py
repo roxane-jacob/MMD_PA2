@@ -41,7 +41,7 @@ if __name__ == '__main__':
     # fit and predict linear sequential
     print('\n--- Linear Sequential SVM ---')
     start = time.time()
-    linear_sequential_svm = SequentialSVM(learning_rate, regularization)
+    linear_sequential_svm = SequentialSVM(learning_rate, regularization, n_nonlinear_features=20)
     linear_sequential_svm.fit(X_train, y_train)
     y_predicted_linear_sequential = linear_sequential_svm.predict(X_test)
     end = time.time()
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     # fit and predict linear parallel
     print('\n--- Linear Parallel SVM ---')
     start = time.time()
-    linear_parallel_svm = ParallelSVM(learning_rate, regularization, num_threads)
+    linear_parallel_svm = ParallelSVM(learning_rate, regularization, num_threads, n_nonlinear_features=20)
     linear_parallel_svm.fit(X_train, y_train)
     y_predicted_linear_parallel = linear_parallel_svm.predict(X_test)
     end = time.time()
