@@ -86,17 +86,7 @@ class ParallelSVM:
         # update w
         self.sub_w -= self.lr * dw
 
-    def subfit(self, X, y):
-
-        # take a subset of points
-        positions = np.random.randint(0, int(len(X)), int(len(X) / self.n_threads))
-        Xi = []
-        yi = []
-        for j in positions:
-            Xi.append(X[j])
-            yi.append(y[j])
-        Xi = np.array(Xi)
-        yi = np.array(yi)
+    def subfit(self, Xi, yi):
 
         self._init_sub_w(Xi)
 
@@ -118,7 +108,11 @@ class ParallelSVM:
         b = np.ones((n_samples, 1))
         X = np.concatenate((X, b), axis=1)
 
-        Parallel(n_jobs=self.n_threads, backend='threading')(delayed(self.subfit)(X, y) for _ in range(self.n_threads))
+        sample_to_thread = np.random.randint(0, self.n_threads, n_samples)
+        Xs = [X[sample_to_thread == i] for i in range(self.n_threads)]
+        ys = [y[sample_to_thread == i] for i in range(self.n_threads)]
+
+        Parallel(n_jobs=self.n_threads, backend='threading')(delayed(self.subfit)(Xi, yi) for Xi, yi in zip(Xs, ys))
 
         self.w = sum(self.sub_ws) / self.n_threads  # compute w by taking the average of sub_ws
 

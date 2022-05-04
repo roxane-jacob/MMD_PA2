@@ -35,7 +35,7 @@ if __name__ == '__main__':
     # set parameters
     learning_rate = 1e-1
     regularization = 1e-2
-    num_threads = 2
+    num_threads = 8
     print(f'Learning rate: {learning_rate} '
           f'\nRegularization: {regularization} '
           f'\nNumber of threads for parallel implementation: {num_threads}')
