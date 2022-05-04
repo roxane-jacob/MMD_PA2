@@ -1,5 +1,5 @@
 import numpy as np
-import threading
+from joblib import Parallel, delayed
 
 
 class SequentialSVM:
@@ -118,16 +118,7 @@ class ParallelSVM:
         b = np.ones((n_samples, 1))
         X = np.concatenate((X, b), axis=1)
 
-        threads = []
-        for i in range(self.n_threads):
-            thread = threading.Thread(self.subfit(X, y))
-            threads.append(thread)
-
-        for thread in threads:
-            thread.start()
-
-        for thread in threads:
-            thread.join()
+        Parallel(n_jobs=self.n_threads, backend='threading')(delayed(self.subfit)(X, y) for _ in range(self.n_threads))
 
         self.w = sum(self.sub_ws) / self.n_threads  # compute w by taking the average of sub_ws
 

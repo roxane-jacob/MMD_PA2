@@ -21,14 +21,6 @@ if __name__ == '__main__':
     scaler = StandardScaler()
     X = scaler.fit_transform(X)
 
-    # Create non-linear features
-    start = time.time()
-    nlf = NonLinearFeatures(m=20, sigma=2.0)
-    X = nlf.fit_transform(X)
-    end = time.time()
-    print(f'Runtime transformation to non-linear features: {end-start}')
-
-
     # train/test split
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 
@@ -43,8 +35,20 @@ if __name__ == '__main__':
     # set parameters
     learning_rate = 1e-1
     regularization = 1e-2
-    num_threads = 10
-    print(f'Learning rate: {learning_rate} \nRegularization: {regularization} \nNumber of threads: {num_threads}')
+    num_threads = 2
+    print(f'Learning rate: {learning_rate} '
+          f'\nRegularization: {regularization} '
+          f'\nNumber of threads for parallel implementation: {num_threads}')
+
+    # fit and predict sklearn SVC
+    print('\n--- Sklearn SVC ---')
+    start = time.time()
+    sklearn_svc = SVC()
+    sklearn_svc.fit(X_train, y_train)
+    y_predicted_sklearn_svc = sklearn_svc.predict(X_test)
+    end = time.time()
+    print("Elapsed time fit/predict:", end - start)
+    print("Accuracy: {}".format(accuracy_score(y_test, y_predicted_sklearn_svc)))
 
     # fit and predict linear sequential
     print('\n--- Linear Sequential SVM ---')
@@ -65,26 +69,37 @@ if __name__ == '__main__':
     end = time.time()
     print("Runtime fit and predict::", end - start)
     print("Accuracy: {}".format(accuracy_score(y_test, y_predicted_linear_parallel)))
-    """
+
+    # Create non-linear features
+    print('\n--- Compute non-linear features ---')
+    start = time.time()
+    nlf = NonLinearFeatures(m=50, sigma=2.0)
+    X = nlf.fit_transform(X)
+    end = time.time()
+    print(f'Runtime transformation to non-linear features: {end-start}')
+
+    # train/test split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+
     # fit and predict rff sequential
     print('\n--- RFF Sequential SVM ---')
     start = time.time()
-    rff_sequential_svm = RFFSequentialSVM(learning_rate, regularization)
+    rff_sequential_svm = SequentialSVM(learning_rate, regularization)
     rff_sequential_svm.fit(X_train, y_train)
     y_predicted_rff_sequential = rff_sequential_svm.predict(X_test)
     end = time.time()
     print("Runtime fit and predict:", end - start)
     print("Accuracy: {}".format(accuracy_score(y_test, y_predicted_rff_sequential)))
-    """
-    # fit and predict sklearn SVC
-    print('\n--- Sklearn SVC ---')
+
+    # fit and predict rff parallel
+    print('\n--- RFF Parallel SVM ---')
     start = time.time()
-    sklearn_svc = SVC()
-    sklearn_svc.fit(X_train, y_train)
-    y_predicted_sklearn_svc = sklearn_svc.predict(X_test)
+    rff_parallel_svm = ParallelSVM(learning_rate, regularization)
+    rff_parallel_svm.fit(X_train, y_train)
+    y_predicted_rff_parallel = rff_parallel_svm.predict(X_test)
     end = time.time()
-    print("Elapsed time fit/predict:", end - start)
-    print("Accuracy: {}".format(accuracy_score(y_test, y_predicted_sklearn_svc)))
+    print("Runtime fit and predict:", end - start)
+    print("Accuracy: {}".format(accuracy_score(y_test, y_predicted_rff_parallel)))
 
     # Plot true labels
     # two_dim_visualization(X, y, 'True Labels', 'true')
