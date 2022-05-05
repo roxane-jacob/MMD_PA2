@@ -12,39 +12,77 @@ class SequentialSVM:
         self.w = None
         self.omega = None
         self.b = None
+        self.multiclass = False
 
     def _init_weights(self, X):
         _, n_features = X.shape
         self.w = np.zeros(n_features)
 
+    def _init_weights_multiclass(self, X, n_classes):
+        _, n_features = X.shape
+        self.w = np.zeros((n_features, n_classes))
+
     def _get_weights(self):
-        return self.w
+        return np.array(self.w)
 
     def _update_weights(self, x, y):
         # compute gradient
         if y * np.dot(x, self.w) >= 1:
-            dw = self.reg * self.w
+            pass
         else:
-            dw = self.reg * self.w - np.dot(y, x)
-        # update w
-        self.w -= self.lr * dw
+            dw = -y * x
+            # update w
+            self.w -= self.lr * dw
+            # project w
+            self.w *= min(1, 1/(np.linalg.norm(self.w)*np.sqrt(self.reg)))
+
+    def _update_weights_multiclass(self, x, y, n_classes):
+        val = 0
+        for i in range(n_classes):
+            if i is not y:
+                val = max(np.dot(self.w[:, i], x), val)
+        if np.dot(x, self.w[:, y]) - val >= 1:
+            pass
+        else:
+            dw = -x
+            # update w
+            self.w[:, y] -= self.lr * dw
+            # project w
+            self.w *= min(1, 1/(np.linalg.norm(self.w)*np.sqrt(self.reg)))
 
     def fit(self, X, y):
+        n_classes = max(y) + 1
+        if n_classes > 2:
+            self.multiclass = True
+        else:
+            self.multiclass = False
+
         n_samples, n_features = X.shape
 
         # incorporate bias term b into features X
         b = np.ones((n_samples, 1))
         X = np.concatenate((X, b), axis=1)
 
-        self._init_weights(X)
-
-        for _ in range(self.n_max):
-            old_w = self._get_weights()
-            for idx, x in enumerate(X):
-                self._update_weights(x, y[idx])
-            diff = old_w - self.w
-            if np.linalg.norm(diff, 1) < self.tol:
-                break
+        # multiclass case
+        if self.multiclass:
+            self._init_weights_multiclass(X, n_classes)
+            for _ in range(self.n_max):
+                old_w = self._get_weights()
+                for idx, x in enumerate(X):
+                    self._update_weights_multiclass(x, y[idx], n_classes)
+                diff = old_w - self.w
+                if np.linalg.norm(diff, 1) < self.tol:
+                    break
+        # binary case
+        else:
+            self._init_weights(X)
+            for _ in range(self.n_max):
+                old_w = self._get_weights()
+                for idx, x in enumerate(X):
+                    self._update_weights(x, y[idx])
+                diff = old_w - self.w
+                if np.linalg.norm(diff, 1) < self.tol:
+                    break
 
     def predict(self, X):
         n_samples, n_features = X.shape
@@ -80,11 +118,13 @@ class ParallelSVM:
     def _update_sub_w(self, x, y):
         # compute gradient
         if y * np.dot(x, self.sub_w) >= 1:
-            dw = self.reg * self.sub_w
+            pass
         else:
-            dw = self.reg * self.sub_w - np.dot(y, x)
-        # update w
-        self.sub_w -= self.lr * dw
+            dw = -y * x
+            # update w
+            self.sub_w -= self.lr * dw
+            # project w
+            self.sub_w *= min(1, 1 / (np.linalg.norm(self.sub_w) * np.sqrt(self.reg)))
 
     def subfit(self, Xi, yi):
 

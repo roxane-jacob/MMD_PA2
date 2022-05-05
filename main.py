@@ -9,13 +9,24 @@ import time
 from svm import SequentialSVM, ParallelSVM, NonLinearFeatures
 from utils import two_dim_visualization
 
+
+def load_data(path):
+    with np.load(path) as f:
+        X_train, y_train = f['train'], f['train_labels']
+        X_test, y_test = f['test'], f['test_labels']
+        X = np.concatenate((X_train.T, X_test.T))
+        y = np.concatenate((y_train.flatten().astype(int), y_test.flatten().astype(int)))
+        return X, y
+
 if __name__ == '__main__':
 
     # toydata = pd.read_csv('data/toydata_tiny.csv')
     # X, y = np.array(toydata[['x1', 'x2']]), np.array(toydata['y'])
 
-    toydata = pd.read_csv('data/toydata_large.csv')
-    X, y = np.array(toydata[['x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8']]), np.array(toydata['y'])
+    # toydata = pd.read_csv('data/toydata_large.csv')
+    # X, y = np.array(toydata[['x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8']]), np.array(toydata['y'])
+
+    X, y = load_data('data/mnist.npz')
 
     # scale features
     scaler = StandardScaler()
@@ -24,6 +35,12 @@ if __name__ == '__main__':
     # train/test split
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 
+    #train_subset = np.linspace(0, 59999, 1000).astype(int)
+    #test_subset = np.linspace(0, 9999, 200).astype(int)
+    #X_train = X_train[train_subset]
+    #y_train = y_train[train_subset]
+    #X_test = X_test[test_subset]
+    #y_test = y_test[test_subset]
     """
     # load data
     data = np.load("mnist.npz")
@@ -41,14 +58,14 @@ if __name__ == '__main__':
           f'\nNumber of threads for parallel implementation: {num_threads}')
 
     # fit and predict sklearn SVC
-    print('\n--- Sklearn SVC ---')
-    start = time.time()
-    sklearn_svc = SVC()
-    sklearn_svc.fit(X_train, y_train)
-    y_predicted_sklearn_svc = sklearn_svc.predict(X_test)
-    end = time.time()
-    print("Elapsed time fit/predict:", end - start)
-    print("Accuracy: {}".format(accuracy_score(y_test, y_predicted_sklearn_svc)))
+    #print('\n--- Sklearn SVC ---')
+    #start = time.time()
+    #sklearn_svc = SVC()
+    #sklearn_svc.fit(X_train, y_train)
+    #y_predicted_sklearn_svc = sklearn_svc.predict(X_test)
+    #end = time.time()
+    #print("Elapsed time fit/predict:", end - start)
+    #print("Accuracy: {}".format(accuracy_score(y_test, y_predicted_sklearn_svc)))
 
     # fit and predict linear sequential
     print('\n--- Linear Sequential SVM ---')
@@ -73,7 +90,7 @@ if __name__ == '__main__':
     # Create non-linear features
     print('\n--- Compute non-linear features ---')
     start = time.time()
-    nlf = NonLinearFeatures(m=50, sigma=2.0)
+    nlf = NonLinearFeatures(m=20, sigma=2.0)
     X = nlf.fit_transform(X)
     end = time.time()
     print(f'Runtime transformation to non-linear features: {end-start}')
