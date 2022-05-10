@@ -7,16 +7,8 @@ from sklearn.svm import SVC
 import time
 
 from svm import SequentialSVM, ParallelSVM, NonLinearFeatures
-from utils import two_dim_visualization
+from utils import two_dim_visualization, load_data
 
-
-def load_data(path):
-    with np.load(path) as f:
-        X_train, y_train = f['train'], f['train_labels']
-        X_test, y_test = f['test'], f['test_labels']
-        X = np.concatenate((X_train.T, X_test.T))
-        y = np.concatenate((y_train.flatten().astype(int), y_test.flatten().astype(int)))
-        return X, y
 
 if __name__ == '__main__':
 
@@ -34,20 +26,6 @@ if __name__ == '__main__':
 
     # train/test split
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-
-    #train_subset = np.linspace(0, 59999, 1000).astype(int)
-    #test_subset = np.linspace(0, 9999, 200).astype(int)
-    #X_train = X_train[train_subset]
-    #y_train = y_train[train_subset]
-    #X_test = X_test[test_subset]
-    #y_test = y_test[test_subset]
-    """
-    # load data
-    data = np.load("mnist.npz")
-    X, y = np.array(data["train"]), np.array(data["train_labels"])
-    X_test, y_test = np.array(data["test"]), np.array(data["test_labels"])
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=10000, train_size=50000, random_state=42)
-    """
 
     # set parameters
     learning_rate = 1e-1
@@ -94,19 +72,19 @@ if __name__ == '__main__':
     print('\n--- Compute non-linear features ---')
     start = time.time()
     nlf = NonLinearFeatures(m=20, sigma=2.0)
-    X = nlf.fit_transform(X)
+    X_rff = nlf.fit_transform(X)
     end = time.time()
     print(f'Runtime transformation to non-linear features: {end-start}')
 
     # train/test split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+    X_rff_train, X_rff_test, y_train, y_test = train_test_split(X_rff, y, random_state=42)
 
     # fit and predict rff sequential
     print('\n--- RFF Sequential SVM ---')
     start = time.time()
     rff_sequential_svm = SequentialSVM(learning_rate, regularization)
-    rff_sequential_svm.fit(X_train, y_train)
-    y_predicted_rff_sequential = rff_sequential_svm.predict(X_test)
+    rff_sequential_svm.fit(X_rff_train, y_train)
+    y_predicted_rff_sequential = rff_sequential_svm.predict(X_rff_test)
     end = time.time()
     print("Runtime fit and predict:", end - start)
     print("Accuracy: {}".format(accuracy_score(y_test, y_predicted_rff_sequential)))
@@ -115,13 +93,19 @@ if __name__ == '__main__':
     print('\n--- RFF Parallel SVM ---')
     start = time.time()
     rff_parallel_svm = ParallelSVM(learning_rate, regularization)
-    rff_parallel_svm.fit(X_train, y_train)
-    y_predicted_rff_parallel = rff_parallel_svm.predict(X_test)
+    rff_parallel_svm.fit(X_rff_train, y_train)
+    y_predicted_rff_parallel = rff_parallel_svm.predict(X_rff_test)
     end = time.time()
     print("Runtime fit and predict:", end - start)
     print("Accuracy: {}".format(accuracy_score(y_test, y_predicted_rff_parallel)))
 
+    """
     # Plot true labels
-    # two_dim_visualization(X, y, 'True Labels', 'true')
+    two_dim_visualization(X_test, y_test, 'output/true.png')
     # Plot predicted labels
-    # two_dim_visualization(X, y_predicted, 'Predicted Labels', 'predicted')
+    two_dim_visualization(X_test, y_predicted_sklearn_svc, 'output/predicted_sklearn_svc.png')
+    two_dim_visualization(X_test, y_predicted_linear_sequential, 'output/predicted_linear_sequential.png')
+    two_dim_visualization(X_test, y_predicted_linear_parallel, 'output/predicted_linear_parallel.png')
+    two_dim_visualization(X_test, y_predicted_rff_sequential, 'output/predicted_rff_sequential.png')
+    two_dim_visualization(X_test, y_predicted_rff_parallel, 'output/predicted_rff_parallel.png')
+    """

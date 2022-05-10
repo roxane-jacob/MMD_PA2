@@ -1,7 +1,14 @@
-import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.decomposition import PCA
+
+
+def load_data(path):
+    with np.load(path) as f:
+        X_train, y_train = f['train'], f['train_labels']
+        X_test, y_test = f['test'], f['test_labels']
+        X = np.concatenate((X_train.T, X_test.T))
+        y = np.concatenate((y_train.flatten().astype(int), y_test.flatten().astype(int)))
+        return X, y
 
 
 def two_dim_visualization(data, labels, path):
