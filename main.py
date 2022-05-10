@@ -11,11 +11,11 @@ from utils import two_dim_visualization
 
 if __name__ == '__main__':
 
-    #toydata = pd.read_csv('data/toydata_tiny.csv')
-    #X, y = np.array(toydata[['x1', 'x2']]), np.array(toydata['y'])
+    toydata = pd.read_csv('data/toydata_tiny.csv')
+    X, y = np.array(toydata[['x1', 'x2']]), np.array(toydata['y'])
 
-    toydata = pd.read_csv('data/toydata_large.csv')
-    X, y = np.array(toydata[['x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8']]), np.array(toydata['y'])
+    #toydata = pd.read_csv('data/toydata_large.csv')
+    #X, y = np.array(toydata[['x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8']]), np.array(toydata['y'])
 
     # scale features
     scaler = StandardScaler()
@@ -102,16 +102,11 @@ if __name__ == '__main__':
     print("Accuracy: {}".format(accuracy_score(y_test, y_predicted_rff_parallel)))
 
     # Plot true labels
-    two_dim_visualization(X_test, y_test, 'True Labels', 'true')
+    two_dim_visualization(X_test, y_test, 'output/true.png')
     # Plot predicted labels
-    two_dim_visualization(X_test, y_predicted_sklearn_svc, 'Predicted Labels Sklearn SVC',
-                          'output/predicted_sklearn_svc.png')
-    two_dim_visualization(X_test, y_predicted_linear_sequential, 'Predicted Labels Linear Sequential',
-                          'output/predicted_linear_sequential.png')
-    two_dim_visualization(X_test, y_predicted_linear_parallel, 'Predicted Labels Linear Parallel',
-                          'output/predicted_linear_parallel.png')
-    two_dim_visualization(X_test, y_predicted_rff_sequential, 'Predicted Labels RFF Sequential',
-                          'output/predicted_rff_sequential.png')
-    two_dim_visualization(X_test, y_predicted_rff_parallel, 'Predicted Labels RFF Parallel',
-                          'output/predicted_rff_parallel.png')
+    two_dim_visualization(X_test, y_predicted_sklearn_svc, 'output/predicted_sklearn_svc.png')
+    two_dim_visualization(X_test, y_predicted_linear_sequential, 'output/predicted_linear_sequential.png')
+    two_dim_visualization(X_test, y_predicted_linear_parallel, 'output/predicted_linear_parallel.png')
+    two_dim_visualization(X_test, y_predicted_rff_sequential, 'output/predicted_rff_sequential.png')
+    two_dim_visualization(X_test, y_predicted_rff_parallel, 'output/predicted_rff_parallel.png')
 
