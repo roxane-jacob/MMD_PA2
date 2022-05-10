@@ -3,56 +3,59 @@ from joblib import Parallel, delayed
 
 
 class SequentialSVM:
-
     def __init__(self, learning_rate=1e-3, regularization_parameter=1e-2, tolerance=1e-6, max_num_iterations=1000):
         self.lr = learning_rate
         self.reg = regularization_parameter
         self.tol = tolerance
         self.n_max = max_num_iterations
         self.w = None
-        self.omega = None
-        self.b = None
+        self.wi = []
         self.multiclass = False
+        self.n_classes = None
 
     def _init_weights(self, X):
-        _, n_features = X.shape
-        self.w = np.zeros(n_features)
-
-    def _init_weights_multiclass(self, X, n_classes):
-        _, n_features = X.shape
-        self.w = np.zeros((n_features, n_classes))
+        if self.multiclass:
+            _, n_features = X.shape
+            w = np.zeros((n_features, self.n_classes))
+        else:
+            _, n_features = X.shape
+            w = np.zeros(n_features)
+        return w
 
     def _get_weights(self):
         return np.array(self.w)
 
-    def _update_weights(self, x, y):
-        # compute gradient
-        if y * np.dot(x, self.w) >= 1:
-            pass
-        else:
-            dw = -y * x
-            # update w
-            self.w -= self.lr * dw
-            # project w
-            self.w *= min(1, 1/(np.linalg.norm(self.w)*np.sqrt(self.reg)))
+    def _update_weights(self, x, y, w):
+        if self.multiclass:
+            val = 0
+            for i in range(self.n_classes):
+                if i is not y:
+                    val = max(np.dot(w[:, i], x), val)
+            if np.dot(x, w[:, y]) - val >= 1:
+                pass
+            else:
+                dw = -x
+                # update w
+                w[:, y] -= self.lr * dw
+                # project w
+                w *= min(1, 1 / (np.linalg.norm(w) * np.sqrt(self.reg)))
+            return w
 
-    def _update_weights_multiclass(self, x, y, n_classes):
-        val = 0
-        for i in range(n_classes):
-            if i is not y:
-                val = max(np.dot(self.w[:, i], x), val)
-        if np.dot(x, self.w[:, y]) - val >= 1:
-            pass
         else:
-            dw = -x
-            # update w
-            self.w[:, y] -= self.lr * dw
-            # project w
-            self.w *= min(1, 1/(np.linalg.norm(self.w)*np.sqrt(self.reg)))
+            # compute gradient
+            if y * np.dot(x, w) >= 1:
+                pass
+            else:
+                dw = -y * x
+                # update w
+                w -= self.lr * dw
+                # project w
+                w *= min(1, 1/(np.linalg.norm(w)*np.sqrt(self.reg)))
+            return w
 
     def fit(self, X, y):
-        n_classes = max(y) + 1
-        if n_classes > 2:
+        self.n_classes = max(y) + 1
+        if self.n_classes > 2:
             self.multiclass = True
         else:
             self.multiclass = False
@@ -62,27 +65,21 @@ class SequentialSVM:
         # incorporate bias term b into features X
         b = np.ones((n_samples, 1))
         X = np.concatenate((X, b), axis=1)
+        self.runner(X, y)
+        self.w = self.wi[0]
 
-        # multiclass case
-        if self.multiclass:
-            self._init_weights_multiclass(X, n_classes)
-            for _ in range(self.n_max):
-                old_w = self._get_weights()
-                for idx, x in enumerate(X):
-                    self._update_weights_multiclass(x, y[idx], n_classes)
-                diff = old_w - self.w
-                if np.linalg.norm(diff, 1) < self.tol:
-                    break
-        # binary case
-        else:
-            self._init_weights(X)
-            for _ in range(self.n_max):
-                old_w = self._get_weights()
-                for idx, x in enumerate(X):
-                    self._update_weights(x, y[idx])
-                diff = old_w - self.w
-                if np.linalg.norm(diff, 1) < self.tol:
-                    break
+    def runner(self, X, y):
+        w = self._init_weights(X)
+
+        for _ in range(self.n_max):
+            old_w = w
+            for idx, x in enumerate(X):
+                w = self._update_weights(x, y[idx], w)
+            diff = old_w - w
+            if np.linalg.norm(diff, 1) < self.tol:
+                break
+
+        self.wi.append(w)
 
     def predict(self, X):
         n_samples, n_features = X.shape
@@ -91,58 +88,27 @@ class SequentialSVM:
         b = np.ones((n_samples, 1))
         X = np.concatenate((X, b), axis=1)
 
-        prediction = np.sign(np.dot(X, self.w)).astype(int)
+        if self.multiclass:
+            prediction = np.argmax(self.w.T @ X.T, axis=0)
+        else:
+            prediction = np.sign(np.dot(X, self.w)).astype(int)
         return prediction
 
 
-class ParallelSVM:
-
-    def __init__(self, learning_rate=1e-3, regularization_parameter=1e-2, num_threads=1, tolerance=1e-6,
-                 max_num_iterations=1000):
-        self.lr = learning_rate
-        self.reg = regularization_parameter
+class ParallelSVM(SequentialSVM):
+    def __init__(self, learning_rate=1e-3, regularization_parameter=1e-2, tolerance=1e-6, max_num_iterations=1000,
+                 num_threads=1):
+        SequentialSVM.__init__(self, learning_rate, regularization_parameter, tolerance, max_num_iterations)
         self.n_threads = num_threads
-        self.tol = tolerance
-        self.n_max = max_num_iterations
-        self.w = None
-        self.sub_w = None
-        self.sub_ws = []
-
-    def _init_sub_w(self, X):
-        _, n_features = X.shape
-        self.sub_w = np.zeros(n_features)
-
-    def _get_sub_w(self):
-        return self.sub_w
-
-    def _update_sub_w(self, x, y):
-        # compute gradient
-        if y * np.dot(x, self.sub_w) >= 1:
-            pass
-        else:
-            dw = -y * x
-            # update w
-            self.sub_w -= self.lr * dw
-            # project w
-            self.sub_w *= min(1, 1 / (np.linalg.norm(self.sub_w) * np.sqrt(self.reg)))
-
-    def subfit(self, Xi, yi):
-
-        self._init_sub_w(Xi)
-
-        for n in range(self.n_max):
-            old_sub_w = self._get_sub_w()
-            for idx, x in enumerate(Xi):
-                self._update_sub_w(x, yi[idx])
-            if n > 0:
-                diff = old_sub_w - self.sub_w
-                if np.linalg.norm(diff, 1) < self.tol:
-                    break
-
-        self.sub_ws.append(self.sub_w)
 
     def fit(self, X, y):
         n_samples, n_features = X.shape
+
+        self.n_classes = max(y) + 1
+        if self.n_classes > 2:
+            self.multiclass = True
+        else:
+            self.multiclass = False
 
         # incorporate bias term b into features X
         b = np.ones((n_samples, 1))
@@ -152,19 +118,9 @@ class ParallelSVM:
         Xs = [X[sample_to_thread == i] for i in range(self.n_threads)]
         ys = [y[sample_to_thread == i] for i in range(self.n_threads)]
 
-        Parallel(n_jobs=self.n_threads, backend='threading')(delayed(self.subfit)(Xi, yi) for Xi, yi in zip(Xs, ys))
+        Parallel(n_jobs=self.n_threads, backend='threading')(delayed(self.runner)(Xi, yi) for Xi, yi in zip(Xs, ys))
 
-        self.w = sum(self.sub_ws) / self.n_threads  # compute w by taking the average of sub_ws
-
-    def predict(self, X):
-        n_samples, n_features = X.shape
-
-        # incorporate bias term b into features X
-        b = np.ones((n_samples, 1))
-        X = np.concatenate((X, b), axis=1)
-
-        prediction = np.sign(np.dot(X, self.w)).astype(int)
-        return prediction
+        self.w = sum(self.wi) / self.n_threads  # compute w by taking the average of sub_ws
 
 
 class NonLinearFeatures:
