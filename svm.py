@@ -9,7 +9,6 @@ class SequentialSVM:
         self.tol = tolerance
         self.n_max = max_num_iterations
         self.w = None
-        self.wi = []
         self.multiclass = False
         self.n_classes = None
 
@@ -65,8 +64,7 @@ class SequentialSVM:
         # incorporate bias term b into features X
         b = np.ones((n_samples, 1))
         X = np.concatenate((X, b), axis=1)
-        self.runner(X, y)
-        self.w = self.wi[0]
+        self.w = self.runner(X, y)
 
     def runner(self, X, y):
         w = self._init_weights(X)
@@ -79,7 +77,7 @@ class SequentialSVM:
             if np.linalg.norm(diff, 1) < self.tol:
                 break
 
-        self.wi.append(w)
+        return w
 
     def predict(self, X):
         n_samples, n_features = X.shape
@@ -118,9 +116,9 @@ class ParallelSVM(SequentialSVM):
         Xs = [X[sample_to_thread == i] for i in range(self.n_threads)]
         ys = [y[sample_to_thread == i] for i in range(self.n_threads)]
 
-        Parallel(n_jobs=self.n_threads, backend='threading')(delayed(self.runner)(Xi, yi) for Xi, yi in zip(Xs, ys))
+        ws = Parallel(n_jobs=self.n_threads, backend='threading')(delayed(self.runner)(Xi, yi) for Xi, yi in zip(Xs, ys))
 
-        self.w = sum(self.wi) / self.n_threads  # compute w by taking the average of sub_ws
+        self.w = sum(ws) / self.n_threads  # compute w by taking the average of sub_ws
 
 
 class NonLinearFeatures:
