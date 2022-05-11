@@ -21,9 +21,6 @@ def runner_mnist(path):
     X_train = scaler.transform(X_train)
     X_test = scaler.transform(X_test)
 
-    # train/test split
-    #X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-
     # compute baseline accuracy (dummy classifier)
     dummy_clf = DummyClassifier(strategy='stratified')
     dummy_clf.fit(X_train, y_train)
@@ -52,9 +49,6 @@ def runner_mnist(path):
     X_rff_test = nlf.fit_transform(X_test[:500])
     end = time.time()
     print(f'Runtime transformation to RFF features: {end - start}')
-
-    # train/test split of RFF features
-    #X_rff_train, X_rff_test, y_train, y_test = train_test_split(X_rff, y, random_state=42)
 
     # run sequential RFF svm
     print('\n--- Sequential RFF SVM ---')
