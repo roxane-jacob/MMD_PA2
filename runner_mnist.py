@@ -27,19 +27,15 @@ def runner_mnist(path):
     dummy_clf.fit(X_train, y_train)
     print("\nBaseline Accuracy: {}".format(dummy_clf.score(X_test, y_test)))
 
-    # run sklearn svc
-    # y_predicted_sklearn_svc = sklearn_svc(X_train, X_test, y_train, y_test)
-
     # run sequential linear svm
-    y_predicted_sequential_linear = sequential_linear_svm(X_train, X_test, y_train, y_test,
-                                                          learning_rate=1e-1, regularization=1e-2)
+    _ = sequential_linear_svm(X_train, X_test, y_train, y_test, learning_rate=1e-1, regularization=1e-2)
 
     # ---------- Compute RFF Features ----------
 
     # Create RFF features
     print('\n--- Compute RFF features ---')
     start = time.time()
-    nlf = NonLinearFeatures(m=300, sigma=2.0)
+    nlf = NonLinearFeatures(m=1000, sigma=2.0)
     X_rff = nlf.fit_transform(X)
     end = time.time()
     print(f'Runtime transformation to RFF features: {end - start}')
@@ -87,4 +83,4 @@ def runner_mnist(path):
     axs[1].set_xlabel('training set size')
     axs[1].set_ylabel('accuracy')
     axs[1].legend()
-    plt.savefig('output/mnist_sequential_rff_vs_sklearn', dpi=150, format='png')
+    plt.savefig('output/mnist_sequential_rff_vs_sklearn.png', dpi=150)

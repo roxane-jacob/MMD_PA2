@@ -11,6 +11,6 @@ if __name__ == '__main__':
     mnist = 'data/mnist.npz'
 
     # run procedures on all three datasets
-    #runner_toydata_tiny(toy_tiny)
-    #runner_toydata_large(toy_large)
+    runner_toydata_tiny(toy_tiny)
+    runner_toydata_large(toy_large)
     runner_mnist(mnist)

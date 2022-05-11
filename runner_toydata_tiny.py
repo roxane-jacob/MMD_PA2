@@ -27,7 +27,10 @@ def runner_toydata_tiny(path):
     print("\nBaseline Accuracy: {}".format(dummy_clf.score(X_test, y_test)))
 
     # run sklearn svc
+    print('\n--- Sklearn SVC ---')
     y_pred_sklearn_svc, runtime_sklearn_svc, accuracy_sklearn_svc = sklearn_svc(X_train, X_test, y_train, y_test)
+    print(f"Elapsed time fit/predict: {runtime_sklearn_svc}")
+    print(f"Accuracy: {accuracy_sklearn_svc}")
 
     # run sequential linear svm
     y_pred_seq_linear, runtime_seq_linear, accuracy_seq_linear = sequential_linear_svm(X_train, X_test, y_train, y_test,
@@ -58,7 +61,8 @@ def runner_toydata_tiny(path):
     y_pred_par_rff, runtime_par_rff, accuracy_par_rff = parallel_rff_svm(X_rff_train, X_rff_test, y_train, y_test,
                                                                          learning_rate=1e-1, regularization=1e-2, num_threads=8)
 
-    # plot results
+    # ---------- Plot results ----------
+
     # Plot true labels
     two_dim_visualization(X_test, y_test, 'output/true.png')
     # Plot predicted labels
