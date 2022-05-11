@@ -51,7 +51,7 @@ def parallel_linear_svm(X_train, X_test, y_train, y_test, learning_rate, regular
     clf.fit(X_train, y_train)
     y_predicted = clf.predict(X_test)
     end = time.time()
-    runtime = end - start
+    runtime = (end - start) / num_threads
     accuracy = accuracy_score(y_test, y_predicted)
 
     return y_predicted, runtime, accuracy
@@ -64,7 +64,7 @@ def parallel_rff_svm(X_train, X_test, y_train, y_test, learning_rate, regulariza
     clf.fit(X_train, y_train)
     y_predicted = clf.predict(X_test)
     end = time.time()
-    runtime = end - start
+    runtime = (end - start) / num_threads
     accuracy = accuracy_score(y_test, y_predicted)
 
     return y_predicted, runtime, accuracy

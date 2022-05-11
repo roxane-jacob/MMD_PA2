@@ -69,13 +69,8 @@ class SequentialSVM:
     def runner(self, X, y):
         w = self._init_weights(X)
 
-        for _ in range(self.n_max):
-            old_w = w
-            for idx, x in enumerate(X):
-                w = self._update_weights(x, y[idx], w)
-            diff = old_w - w
-            if np.linalg.norm(diff, 1) < self.tol:
-                break
+        for idx, x in enumerate(X):
+            w = self._update_weights(x, y[idx], w)
 
         return w
 
@@ -116,7 +111,11 @@ class ParallelSVM(SequentialSVM):
         Xs = [X[sample_to_thread == i] for i in range(self.n_threads)]
         ys = [y[sample_to_thread == i] for i in range(self.n_threads)]
 
-        ws = Parallel(n_jobs=self.n_threads, backend='threading')(delayed(self.runner)(Xi, yi) for Xi, yi in zip(Xs, ys))
+        ws = []
+        for Xi, yi in zip(Xs, ys):
+            ws.append(self.runner(Xi, yi))
+
+        #ws = Parallel(n_jobs=self.n_threads, backend='threading')(delayed(self.runner)(Xi, yi) for Xi, yi in zip(Xs, ys))
 
         self.w = sum(ws) / self.n_threads  # compute w by taking the average of sub_ws
 
