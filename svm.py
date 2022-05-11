@@ -3,7 +3,8 @@ from joblib import Parallel, delayed
 
 
 class SequentialSVM:
-    def __init__(self, learning_rate=1e-3, regularization_parameter=1e-2, tolerance=1e-6, max_num_iterations=1000):
+    def __init__(self, learning_rate=1e-3, regularization_parameter=1e-2, tolerance=1e-6,
+                 max_num_iterations=1000, store_sgd_progress=False):
         self.lr = learning_rate
         self.reg = regularization_parameter
         self.tol = tolerance
@@ -11,6 +12,8 @@ class SequentialSVM:
         self.w = None
         self.multiclass = False
         self.n_classes = None
+        self.store_sgd_progress = store_sgd_progress
+        self.sgd_progress = []
 
     def _init_weights(self, X):
         if self.multiclass:
@@ -69,10 +72,18 @@ class SequentialSVM:
     def runner(self, X, y):
         w = self._init_weights(X)
 
-        for idx, x in enumerate(X):
-            w = self._update_weights(x, y[idx], w)
-
+        if self.store_sgd_progress:
+            for idx, x in enumerate(X):
+                old_w = np.array(w)
+                w = self._update_weights(x, y[idx], w)
+                self.sgd_progress.append(np.linalg.norm(w - old_w, ord=1))
+        else:
+            for idx, x in enumerate(X):
+                w = self._update_weights(x, y[idx], w)
         return w
+
+    def get_sgd_progress(self):
+        return self.sgd_progress
 
     def predict(self, X):
         n_samples, n_features = X.shape

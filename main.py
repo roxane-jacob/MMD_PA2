@@ -1,5 +1,4 @@
-from runner_toydata_tiny import runner_toydata_tiny
-from runner_toydata_large import runner_toydata_large
+from runner_toydata import runner_toydata
 from runner_mnist import runner_mnist
 
 
@@ -11,6 +10,6 @@ if __name__ == '__main__':
     mnist = 'data/mnist.npz'
 
     # run procedures on all three datasets
-    runner_toydata_tiny(toy_tiny)
-    runner_toydata_large(toy_large)
+    sgd_progress_linear_tiny, sgd_progress_rff_tiny = runner_toydata(toy_tiny, tiny=True)
+    sgd_progress_linear_large, sgd_progress_rff_large = runner_toydata(toy_large, tiny=False)
     runner_mnist(mnist)

@@ -18,46 +18,25 @@ def sklearn_svc(X_train, X_test, y_train, y_test):
     return y_predicted, runtime, accuracy
 
 
-def sequential_linear_svm(X_train, X_test, y_train, y_test, learning_rate, regularization):
+def sequential_svm(X_train, X_test, y_train, y_test, learning_rate, regularization, store_sgd_progress=False):
 
     start = time.time()
-    clf = SequentialSVM(learning_rate, regularization)
+    clf = SequentialSVM(learning_rate, regularization, store_sgd_progress=store_sgd_progress)
     clf.fit(X_train, y_train)
     y_predicted = clf.predict(X_test)
     end = time.time()
     runtime = end - start
     accuracy = accuracy_score(y_test, y_predicted)
 
-    return y_predicted, runtime, accuracy
+    if store_sgd_progress:
+        sgd_progress = clf.get_sgd_progress()
+        return y_predicted, runtime, accuracy, sgd_progress
+
+    else:
+        return y_predicted, runtime, accuracy
 
 
-def sequential_rff_svm(X_train, X_test, y_train, y_test, learning_rate, regularization):
-
-    start = time.time()
-    clf = SequentialSVM(learning_rate, regularization)
-    clf.fit(X_train, y_train)
-    y_predicted = clf.predict(X_test)
-    end = time.time()
-    runtime = end - start
-    accuracy = accuracy_score(y_test, y_predicted)
-
-    return y_predicted, runtime, accuracy
-
-
-def parallel_linear_svm(X_train, X_test, y_train, y_test, learning_rate, regularization, num_threads=8):
-
-    start = time.time()
-    clf = ParallelSVM(learning_rate, regularization, num_threads)
-    clf.fit(X_train, y_train)
-    y_predicted = clf.predict(X_test)
-    end = time.time()
-    runtime = (end - start) / num_threads
-    accuracy = accuracy_score(y_test, y_predicted)
-
-    return y_predicted, runtime, accuracy
-
-
-def parallel_rff_svm(X_train, X_test, y_train, y_test, learning_rate, regularization, num_threads=8):
+def parallel_svm(X_train, X_test, y_train, y_test, learning_rate, regularization, num_threads=8):
 
     start = time.time()
     clf = ParallelSVM(learning_rate, regularization, num_threads)

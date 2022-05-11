@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.utils import shuffle
 
 
 def load_csv(path):
@@ -13,40 +14,65 @@ def load_mnist(path):
     with np.load(path) as f:
         X_train, y_train = f['train'], f['train_labels']
         X_test, y_test = f['test'], f['test_labels']
-        X = np.concatenate((X_train.T, X_test.T))
-        y = np.concatenate((y_train.flatten().astype(int), y_test.flatten().astype(int)))
+        #X = np.concatenate((X_train.T, X_test.T))
+        #y = np.concatenate((y_train.flatten().astype(int), y_test.flatten().astype(int)))
+        X_train, y_train = shuffle(X_train.T, y_train.flatten().astype(int), random_state=0)
+        X_test, y_test = shuffle(X_test.T, y_test.flatten().astype(int), random_state=0)
+        #rnd = np.random.RandomState()
+        #random_positions = rnd.permutation(X.shape[0])
+        #subset_indices = random_positions[:3000]
+        #X = X[subset_indices]
+        #y = y[subset_indices]
 
-        rnd = np.random.RandomState()
-        random_positions = rnd.permutation(X.shape[0])
-        subset_indices = random_positions[:3000]
-        X = X[subset_indices]
-        y = y[subset_indices]
-
-        return X, y
+        return X_train, y_train, X_test, y_test
 
 
 def gridsearch(method, X_train, X_test, y_train, y_test, lr_params, reg_params):
     params = []
-    y_preds = []
-    runtimes = []
+    #y_preds = []
+    #runtimes = []
     accuracies = []
     for lr in lr_params:
         for reg in reg_params:
             y_pred, runtime, accuracy = method(X_train, X_test, y_train, y_test,
                                                learning_rate=lr, regularization=reg)
             params.append((lr, reg))
-            y_preds.append(y_pred)
-            runtimes.append(runtime)
+            #y_preds.append(y_pred)
+            #runtimes.append(runtime)
             accuracies.append(accuracy)
     max_accuracy_index = accuracies.index(max(accuracies))
-    results = {}
-    results['lr'] = params[max_accuracy_index][0]
-    results['reg'] = params[max_accuracy_index][1]
-    results['runtime'] = runtimes[max_accuracy_index]
-    results['accuracy'] = accuracies[max_accuracy_index]
-    results['y_pred'] = y_preds[max_accuracy_index]
+    #results = {}
+    #results['lr'] = params[max_accuracy_index][0]
+    #results['reg'] = params[max_accuracy_index][1]
+    #results['runtime'] = runtimes[max_accuracy_index]
+    #results['accuracy'] = accuracies[max_accuracy_index]
+    #results['y_pred'] = y_preds[max_accuracy_index]
 
-    return results
+    return params[max_accuracy_index]
+
+
+def five_fold_cross_validation(method, X_train, X_test, y_train, y_test, lr, reg):
+    y_pred = None
+    runtimes = []
+    accuracies = []
+
+    for _ in range(5):
+        y_pred, runtime, accuracy = method(X_train, X_test, y_train, y_test,
+                                           learning_rate=lr, regularization=reg)
+        accuracies.append(accuracy)
+        runtimes.append(runtime)
+
+    runtime = sum(runtimes) / len(runtimes)
+    accuracy = sum(accuracies) / len(accuracies)
+
+    return y_pred, runtime, accuracy
+
+
+def sgd_progress(method, X_train, X_test, y_train, y_test, lr, reg):
+    _, _, _, progress = method(X_train, X_test, y_train, y_test,
+                               learning_rate=lr, regularization=reg, store_sgd_progress=True)
+
+    return progress
 
 
 def two_dim_visualization(data, labels, path):
