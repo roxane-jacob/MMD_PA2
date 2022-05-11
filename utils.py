@@ -15,7 +15,38 @@ def load_mnist(path):
         X_test, y_test = f['test'], f['test_labels']
         X = np.concatenate((X_train.T, X_test.T))
         y = np.concatenate((y_train.flatten().astype(int), y_test.flatten().astype(int)))
+
+        rnd = np.random.RandomState()
+        random_positions = rnd.permutation(X.shape[0])
+        subset_indices = random_positions[:3000]
+        X = X[subset_indices]
+        y = y[subset_indices]
+
         return X, y
+
+
+def gridsearch(method, X_train, X_test, y_train, y_test, lr_params, reg_params):
+    params = []
+    y_preds = []
+    runtimes = []
+    accuracies = []
+    for lr in lr_params:
+        for reg in reg_params:
+            y_pred, runtime, accuracy = method(X_train, X_test, y_train, y_test,
+                                               learning_rate=lr, regularization=reg)
+            params.append((lr, reg))
+            y_preds.append(y_pred)
+            runtimes.append(runtime)
+            accuracies.append(accuracy)
+    max_accuracy_index = accuracies.index(max(accuracies))
+    results = {}
+    results['lr'] = params[max_accuracy_index][0]
+    results['reg'] = params[max_accuracy_index][1]
+    results['runtime'] = runtimes[max_accuracy_index]
+    results['accuracy'] = accuracies[max_accuracy_index]
+    results['y_pred'] = y_preds[max_accuracy_index]
+
+    return results
 
 
 def two_dim_visualization(data, labels, path):

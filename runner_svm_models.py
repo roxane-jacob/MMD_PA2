@@ -44,7 +44,7 @@ def sequential_rff_svm(X_train, X_test, y_train, y_test, learning_rate, regulari
     return y_predicted, runtime, accuracy
 
 
-def parallel_linear_svm(X_train, X_test, y_train, y_test, learning_rate, regularization, num_threads):
+def parallel_linear_svm(X_train, X_test, y_train, y_test, learning_rate, regularization, num_threads=8):
 
     start = time.time()
     clf = ParallelSVM(learning_rate, regularization, num_threads)
@@ -57,7 +57,7 @@ def parallel_linear_svm(X_train, X_test, y_train, y_test, learning_rate, regular
     return y_predicted, runtime, accuracy
 
 
-def parallel_rff_svm(X_train, X_test, y_train, y_test, learning_rate, regularization, num_threads):
+def parallel_rff_svm(X_train, X_test, y_train, y_test, learning_rate, regularization, num_threads=8):
 
     start = time.time()
     clf = ParallelSVM(learning_rate, regularization, num_threads)

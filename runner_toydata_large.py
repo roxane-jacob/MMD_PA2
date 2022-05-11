@@ -5,7 +5,7 @@ import time
 
 from svm import NonLinearFeatures
 from runner_svm_models import sklearn_svc, sequential_linear_svm, sequential_rff_svm, parallel_linear_svm, parallel_rff_svm
-from utils import load_csv
+from utils import load_csv, gridsearch
 
 
 def runner_toydata_large(path):
@@ -27,10 +27,22 @@ def runner_toydata_large(path):
     print("\nBaseline Accuracy: {}".format(dummy_clf.score(X_test, y_test)))
 
     # run sklearn svc
-    _ = sklearn_svc(X_train, X_test, y_train, y_test)
+    print('\n--- Sklearn SVC ---')
+    y_pred_sklearn_svc, runtime_sklearn_svc, accuracy_sklearn_svc = sklearn_svc(X_train, X_test, y_train, y_test)
+    print(f"Elapsed time fit/predict: {runtime_sklearn_svc}")
+    print(f"Accuracy: {accuracy_sklearn_svc}")
+
+    # define learning rate and regularization parameter range for gridsearch:
+    lr_params = [1, 1e-1, 1e-2]
+    reg_params = [1, 1e-1, 1e-2]
 
     # run sequential linear svm
-    _ = sequential_linear_svm(X_train, X_test, y_train, y_test, learning_rate=1e-1, regularization=1e-2)
+    print('\n--- Sequential Linear SVM ---')
+    results_seq_linear = gridsearch(sequential_linear_svm, X_train, X_test, y_train, y_test, lr_params, reg_params)
+    print('Best learning rate: {}'.format(results_seq_linear['lr']))
+    print('Best regularization parameter: {}'.format(results_seq_linear['reg']))
+    print('Runtime with best parameters: {}'.format(results_seq_linear['runtime']))
+    print('Accuracy with best parameters: {}'.format(results_seq_linear['accuracy']))
 
     # ---------- Compute RFF Features ----------
 
@@ -46,10 +58,26 @@ def runner_toydata_large(path):
     X_rff_train, X_rff_test, y_train, y_test = train_test_split(X_rff, y, random_state=42)
 
     # run sequential RFF svm
-    _ = sequential_rff_svm(X_rff_train, X_rff_test, y_train, y_test, learning_rate=1e-1, regularization=1e-2)
+    print('\n--- Sequential RFF SVM ---')
+    results_seq_rff = gridsearch(sequential_rff_svm, X_rff_train, X_rff_test, y_train, y_test, lr_params, reg_params)
+    print('Best learning rate: {}'.format(results_seq_rff['lr']))
+    print('Best regularization parameter: {}'.format(results_seq_rff['reg']))
+    print('Runtime with best parameters: {}'.format(results_seq_rff['runtime']))
+    print('Accuracy with best parameters: {}'.format(results_seq_rff['accuracy']))
 
     # run parallel linear svm
-    _ = parallel_linear_svm(X_train, X_test, y_train, y_test, learning_rate=1e-1, regularization=1e-2, num_threads=8)
+    print('\n--- Parallel Linear SVM ---')
+    results_par_linear = gridsearch(parallel_linear_svm, X_train, X_test, y_train, y_test, lr_params,
+                                    reg_params)
+    print('Best learning rate: {}'.format(results_par_linear['lr']))
+    print('Best regularization parameter: {}'.format(results_par_linear['reg']))
+    print('Runtime with best parameters: {}'.format(results_par_linear['runtime']))
+    print('Accuracy with best parameters: {}'.format(results_par_linear['accuracy']))
 
     # run parallel RFF svm
-    _ = parallel_rff_svm(X_rff_train, X_rff_test, y_train, y_test, learning_rate=1e-1, regularization=1e-2, num_threads=8)
+    print('\n--- Parallel RFF SVM ---')
+    results_par_rff = gridsearch(parallel_rff_svm, X_rff_train, X_rff_test, y_train, y_test, lr_params, reg_params)
+    print('Best learning rate: {}'.format(results_par_rff['lr']))
+    print('Best regularization parameter: {}'.format(results_par_rff['reg']))
+    print('Runtime with best parameters: {}'.format(results_par_rff['runtime']))
+    print('Accuracy with best parameters: {}'.format(results_par_rff['accuracy']))

@@ -95,7 +95,7 @@ class SequentialSVM:
 
 class ParallelSVM(SequentialSVM):
     def __init__(self, learning_rate=1e-3, regularization_parameter=1e-2, tolerance=1e-6, max_num_iterations=1000,
-                 num_threads=1):
+                 num_threads=8):
         SequentialSVM.__init__(self, learning_rate, regularization_parameter, tolerance, max_num_iterations)
         self.n_threads = num_threads
 
