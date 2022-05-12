@@ -1,11 +1,10 @@
 import matplotlib.pyplot as plt
 from sklearn.dummy import DummyClassifier
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import time
 
 from svm import NonLinearFeatures
-from runner_svm_models import sklearn_svc, sequential_svm, sequential_svm, parallel_svm, parallel_svm
+from runner_svm_models import sklearn_svc, sequential_svm, parallel_svm
 from utils import load_mnist, gridsearch
 
 
@@ -27,8 +26,8 @@ def runner_mnist(path):
     print("\nBaseline Accuracy: {}".format(dummy_clf.score(X_test, y_test)))
 
     # define learning rate and regularization parameter range for gridsearch:
-    lr_params = [1, 1e-1, 1e-2]
-    reg_params = [1, 1e-1, 1e-2]
+    lr_params = [1, 1e-1, 1e-2, 1e-3]
+    reg_params = [1, 1e-1, 1e-2, 1e-3]
 
     # run sequential linear svm
     print('\n--- Sequential Linear SVM ---')
@@ -40,11 +39,12 @@ def runner_mnist(path):
     print('Accuracy with best parameters: {}'.format(accuracy))
 
     # ---------- Compute RFF Features ----------
+    # using only 3000 training samples and 500 test samples
 
     # Create RFF features
     print('\n--- Compute RFF features ---')
     start = time.time()
-    nlf = NonLinearFeatures(m=2000, sigma=1.0)
+    nlf = NonLinearFeatures(m=1000, sigma=0.5)
     X_rff_train = nlf.fit_transform(X_train[:3000])
     X_rff_test = nlf.fit_transform(X_test[:500])
     end = time.time()
@@ -56,7 +56,6 @@ def runner_mnist(path):
     print('Best learning rate: {}'.format(lr))
     print('Best regularization parameter: {}'.format(reg))
     _, runtime, accuracy = sequential_svm(X_rff_train, X_rff_test, y_train[:3000], y_test[:500], lr, reg)
-
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
 
@@ -66,7 +65,6 @@ def runner_mnist(path):
     print('Best learning rate: {}'.format(lr))
     print('Best regularization parameter: {}'.format(reg))
     _, runtime, accuracy = parallel_svm(X_train, X_test, y_train, y_test, lr, reg)
-
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
 
@@ -76,7 +74,6 @@ def runner_mnist(path):
     print('Best learning rate: {}'.format(lr))
     print('Best regularization parameter: {}'.format(reg))
     _, runtime, accuracy = parallel_svm(X_rff_train, X_rff_test, y_train[:3000], y_test[:500], lr, reg)
-
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
 

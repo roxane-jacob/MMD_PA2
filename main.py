@@ -10,6 +10,6 @@ if __name__ == '__main__':
     mnist = 'data/mnist.npz'
 
     # run procedures on all three datasets
-    sgd_progress_linear_tiny, sgd_progress_rff_tiny = runner_toydata(toy_tiny, tiny=True)
-    sgd_progress_linear_large, sgd_progress_rff_large = runner_toydata(toy_large, tiny=False)
+    runner_toydata(toy_tiny, tiny=True)
+    runner_toydata(toy_large, tiny=False)
     runner_mnist(mnist)

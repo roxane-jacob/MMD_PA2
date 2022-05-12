@@ -13,6 +13,7 @@ class SequentialSVM:
         self.multiclass = False
         self.n_classes = None
         self.store_sgd_progress = store_sgd_progress
+        self.stored_weights = []
         self.sgd_progress = []
 
     def _init_weights(self, X):
@@ -36,23 +37,18 @@ class SequentialSVM:
             if np.dot(x, w[:, y]) - val >= 1:
                 pass
             else:
-                dw = -x
-                # update w
-                w[:, y] -= self.lr * dw
-                # project w
-                w *= min(1, 1 / (np.linalg.norm(w) * np.sqrt(self.reg)))
+                dw = -x  # compute gradient
+                w[:, y] -= self.lr * dw  # update w
+                w *= min(1, 1 / (np.linalg.norm(w) * np.sqrt(self.reg)))  # project w
             return w
 
         else:
-            # compute gradient
             if y * np.dot(x, w) >= 1:
                 pass
             else:
-                dw = -y * x
-                # update w
-                w -= self.lr * dw
-                # project w
-                w *= min(1, 1/(np.linalg.norm(w)*np.sqrt(self.reg)))
+                dw = -y * x  # compute gradient
+                w -= self.lr * dw  # update w
+                w *= min(1, 1/(np.linalg.norm(w)*np.sqrt(self.reg)))  # project w
             return w
 
     def fit(self, X, y):
@@ -67,8 +63,16 @@ class SequentialSVM:
         # incorporate bias term b into features X
         b = np.ones((n_samples, 1))
         X = np.concatenate((X, b), axis=1)
+
         self.w = self.runner(X, y)
 
+        # this I added:
+        if self.store_sgd_progress:
+            for stored_w in self.stored_weights:
+                self.sgd_progress.append(np.linalg.norm(self.w - stored_w, ord=1))
+        # end of what was added
+
+    """
     def runner(self, X, y):
         w = self._init_weights(X)
 
@@ -77,6 +81,19 @@ class SequentialSVM:
                 old_w = np.array(w)
                 w = self._update_weights(x, y[idx], w)
                 self.sgd_progress.append(np.linalg.norm(w - old_w, ord=1))
+        else:
+            for idx, x in enumerate(X):
+                w = self._update_weights(x, y[idx], w)
+        return w
+    """
+
+    def runner(self, X, y):
+        w = self._init_weights(X)
+
+        if self.store_sgd_progress:
+            for idx, x in enumerate(X):
+                self.stored_weights.append(np.array(w))
+                w = self._update_weights(x, y[idx], w)
         else:
             for idx, x in enumerate(X):
                 w = self._update_weights(x, y[idx], w)

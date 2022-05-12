@@ -58,7 +58,17 @@ def sgd_progress(method, X_train, X_test, y_train, y_test, lr, reg):
     return progress
 
 
-def two_dim_visualization(data, labels, path):
+def plot_sgd_convergence(convergence_data_linear, convergence_data_rff, path):
+    plt.figure(figsize=(10, 10))
+    plt.plot(np.arange(1, len(convergence_data_linear)+1), convergence_data_linear, label='linear')
+    plt.plot(np.arange(1, len(convergence_data_rff) + 1), convergence_data_rff, label='rff')
+    plt.xlabel('number of SGD epochs')
+    plt.ylabel('SGD training error')
+    plt.legend()
+    plt.savefig(path, dpi=150)
+
+
+def two_dim_scatterplot(data, labels, path):
     """
     Create a 2D scatter plot from the given input data with coloring corresponding to the labelling.
 
@@ -73,7 +83,7 @@ def two_dim_visualization(data, labels, path):
     """
 
     x1, x2 = data[:, 0], data[:, 1]
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(10, 10))
     plt.scatter(x1, x2, c=labels)
     plt.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
     plt.tick_params(axis='y', which='both', left='off', top='off', labelleft='off')

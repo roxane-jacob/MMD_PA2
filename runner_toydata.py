@@ -4,8 +4,9 @@ from sklearn.preprocessing import StandardScaler
 import time
 
 from svm import NonLinearFeatures
-from runner_svm_models import sklearn_svc, sequential_svm, sequential_svm, parallel_svm, parallel_svm
-from utils import load_csv, two_dim_visualization, gridsearch, five_fold_cross_validation, sgd_progress
+from runner_svm_models import sklearn_svc, sequential_svm, parallel_svm
+from utils import load_csv, gridsearch, five_fold_cross_validation, \
+    sgd_progress, plot_sgd_convergence, two_dim_scatterplot
 
 
 def runner_toydata(path, tiny):
@@ -33,8 +34,8 @@ def runner_toydata(path, tiny):
     print(f"Accuracy: {accuracy_sklearn_svc}")
 
     # define learning rate and regularization parameter range for gridsearch:
-    lr_params = [1, 1e-1, 1e-2]
-    reg_params = [1, 1e-1, 1e-2]
+    lr_params = [1, 1e-1, 1e-2, 1e-3]
+    reg_params = [1, 1e-1, 1e-2, 1e-3]
 
     # run sequential linear svm
     print('\n--- Sequential Linear SVM ---')
@@ -52,7 +53,7 @@ def runner_toydata(path, tiny):
     # Create RFF features
     print('\n--- Compute RFF features ---')
     start = time.time()
-    nlf = NonLinearFeatures(m=20, sigma=2.0)
+    nlf = NonLinearFeatures(m=100, sigma=1.0)
     X_rff = nlf.fit_transform(X)
     end = time.time()
     print(f'Runtime transformation to RFF features: {end - start}')
@@ -92,16 +93,19 @@ def runner_toydata(path, tiny):
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
 
+    # ---------- Plot results ----------
+
     if tiny:
-        # ---------- Plot results ----------
-
         # Plot true labels
-        two_dim_visualization(X_test, y_test, 'output/true.png')
+        two_dim_scatterplot(X_test, y_test, 'output/true.png')
         # Plot predicted labels
-        two_dim_visualization(X_test, y_pred_sklearn_svc, 'output/predicted_sklearn_svc.png')
-        two_dim_visualization(X_test, y_pred_seq_linear, 'output/predicted_linear_sequential.png')
-        two_dim_visualization(X_test, y_pred_par_linear, 'output/predicted_linear_parallel.png')
-        two_dim_visualization(X_test, y_pred_seq_rff, 'output/predicted_rff_sequential.png')
-        two_dim_visualization(X_test, y_pred_par_rff, 'output/predicted_rff_parallel.png')
+        two_dim_scatterplot(X_test, y_pred_sklearn_svc, 'output/predicted_sklearn_svc.png')
+        two_dim_scatterplot(X_test, y_pred_seq_linear, 'output/predicted_linear_sequential.png')
+        two_dim_scatterplot(X_test, y_pred_par_linear, 'output/predicted_linear_parallel.png')
+        two_dim_scatterplot(X_test, y_pred_seq_rff, 'output/predicted_rff_sequential.png')
+        two_dim_scatterplot(X_test, y_pred_par_rff, 'output/predicted_rff_parallel.png')
 
-    return sgd_progress_linear, sgd_progress_rff
+        plot_sgd_convergence(sgd_progress_linear, sgd_progress_rff, 'output/sgd_progress_tiny.png')
+
+    if not tiny:
+        plot_sgd_convergence(sgd_progress_linear, sgd_progress_rff, 'output/sgd_progress_large.png')
