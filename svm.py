@@ -66,26 +66,9 @@ class SequentialSVM:
 
         self.w = self.runner(X, y)
 
-        # this I added:
         if self.store_sgd_progress:
             for stored_w in self.stored_weights:
                 self.sgd_progress.append(np.linalg.norm(self.w - stored_w, ord=1))
-        # end of what was added
-
-    """
-    def runner(self, X, y):
-        w = self._init_weights(X)
-
-        if self.store_sgd_progress:
-            for idx, x in enumerate(X):
-                old_w = np.array(w)
-                w = self._update_weights(x, y[idx], w)
-                self.sgd_progress.append(np.linalg.norm(w - old_w, ord=1))
-        else:
-            for idx, x in enumerate(X):
-                w = self._update_weights(x, y[idx], w)
-        return w
-    """
 
     def runner(self, X, y):
         w = self._init_weights(X)
@@ -154,16 +137,18 @@ class NonLinearFeatures:
         self.sigma = sigma
 
     def _update_random_variables(self, d):
-        self.omega = 1 / self.sigma * np.random.standard_cauchy((d, self.m))
+        self.omega = 1 / self.sigma * np.random.standard_cauchy((self.m, d))
         self.b = 2 * np.pi * np.random.rand(self.m)
 
     def _non_linear_features(self, X):
         n_samples, _ = X.shape
-        X_new = np.zeros((n_samples, self.m))
-        for i, x in enumerate(X):
-            X_new[i, :] = np.sqrt(2 / self.m) * \
-                          np.array([np.cos(np.dot(self.omega[:, i], x) + self.b[i]) for i in range(self.m)])
-        return X_new
+        #X_new = np.zeros((n_samples, self.m))
+        #for i, x in enumerate(X):
+        #    X_new[i, :] = np.sqrt(2 / self.m) * \
+        #                  np.array([np.cos(np.dot(self.omega[i], x) + self.b[i]) for i in range(self.m)])
+
+        Z = np.sqrt(2 / self.m) * np.cos(self.omega @ X.T + np.outer(self.b, np.ones(n_samples))).T
+        return Z
 
     def fit_transform(self, X):
         _, n_features = X.shape

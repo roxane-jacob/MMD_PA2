@@ -26,9 +26,9 @@ def runner_mnist(path):
     print("\nBaseline Accuracy: {}".format(dummy_clf.score(X_test, y_test)))
 
     # define learning rate and regularization parameter range for gridsearch:
-    lr_params = [1, 1e-1, 1e-2, 1e-3]
-    reg_params = [1, 1e-1, 1e-2, 1e-3]
-
+    lr_params = [1e2, 1e1, 1, 1e-1, 1e-2, 1e-3]
+    reg_params = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
+    '''
     # run sequential linear svm
     print('\n--- Sequential Linear SVM ---')
     lr, reg = gridsearch(sequential_svm, X_train, X_test, y_train, y_test, lr_params, reg_params)
@@ -37,25 +37,29 @@ def runner_mnist(path):
     _, runtime, accuracy = sequential_svm(X_train, X_test, y_train, y_test, lr, reg)
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
-
+    '''
     # ---------- Compute RFF Features ----------
     # using only 3000 training samples and 500 test samples
+    X_train = X_train[:3000]
+    X_test = X_test[:500]
+    y_train = y_train[:3000]
+    y_test = y_test[:500]
 
     # Create RFF features
     print('\n--- Compute RFF features ---')
     start = time.time()
-    nlf = NonLinearFeatures(m=1000, sigma=0.5)
-    X_rff_train = nlf.fit_transform(X_train[:3000])
-    X_rff_test = nlf.fit_transform(X_test[:500])
+    nlf = NonLinearFeatures(m=800, sigma=150)
+    X_rff_train = nlf.fit_transform(X_train)
+    X_rff_test = nlf.transform(X_test)
     end = time.time()
     print(f'Runtime transformation to RFF features: {end - start}')
 
     # run sequential RFF svm
     print('\n--- Sequential RFF SVM ---')
-    lr, reg = gridsearch(sequential_svm, X_rff_train, X_rff_test, y_train[:3000], y_test[:500], lr_params, reg_params)
-    print('Best learning rate: {}'.format(lr))
-    print('Best regularization parameter: {}'.format(reg))
-    _, runtime, accuracy = sequential_svm(X_rff_train, X_rff_test, y_train[:3000], y_test[:500], lr, reg)
+    lr_seq, reg_seq = gridsearch(sequential_svm, X_rff_train, X_rff_test, y_train, y_test, lr_params, reg_params)
+    print('Best learning rate: {}'.format(lr_seq))
+    print('Best regularization parameter: {}'.format(reg_seq))
+    _, runtime, accuracy = sequential_svm(X_rff_train, X_rff_test, y_train, y_test, lr_seq, reg_seq)
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
 
@@ -70,10 +74,10 @@ def runner_mnist(path):
 
     # run parallel RFF svm
     print('\n--- Parallel RFF SVM ---')
-    lr, reg = gridsearch(parallel_svm, X_rff_train, X_rff_test, y_train[:3000], y_test[:500], lr_params, reg_params)
+    lr, reg = gridsearch(parallel_svm, X_rff_train, X_rff_test, y_train, y_test, lr_params, reg_params)
     print('Best learning rate: {}'.format(lr))
     print('Best regularization parameter: {}'.format(reg))
-    _, runtime, accuracy = parallel_svm(X_rff_train, X_rff_test, y_train[:3000], y_test[:500], lr, reg)
+    _, runtime, accuracy = parallel_svm(X_rff_train, X_rff_test, y_train, y_test, lr, reg)
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
 
@@ -87,12 +91,11 @@ def runner_mnist(path):
     accuracies_sklearn = []
 
     for size in training_size:
-        _, runtime, accuracy = sequential_svm(X_rff_train[:size], X_rff_test, y_train[:size], y_test[:500],
-                                              learning_rate=1e-1, regularization=1e-2)
+        _, runtime, accuracy = sequential_svm(X_rff_train[:size], X_rff_test, y_train[:size], y_test, lr_seq, reg_seq)
         runtimes_sequential_rff.append(runtime)
         accuracies_sequential_rff.append(accuracy)
 
-        _, runtime, accuracy = sklearn_svc(X_rff_train[:size], X_rff_test, y_train[:size], y_test[:500])
+        _, runtime, accuracy = sklearn_svc(X_rff_train[:size], X_rff_test, y_train[:size], y_test)
         runtimes_sklearn.append(runtime)
         accuracies_sklearn.append(accuracy)
 
