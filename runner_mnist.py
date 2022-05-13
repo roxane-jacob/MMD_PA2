@@ -72,7 +72,7 @@ def runner_mnist(path):
     # Create RFF features for the upcoming gridsearch procedure
     print('\n--- Compute RFF features ---')
     start = time.time()
-    nlf = NonLinearFeatures(m=800, sigma=150)
+    nlf = NonLinearFeatures(m=1000, sigma=150)
     X_rff_train = nlf.fit_transform(X_train)
     X_rff_test = nlf.transform(X_test)
     end = time.time()
@@ -141,8 +141,8 @@ def runner_mnist(path):
         accuracies_sklearn.append(accuracy)
 
     fig, axs = plt.subplots(2, 1)
-    axs[0].plot(training_size, runtimes_sequential_rff, label='sequential RFF')
-    axs[0].plot(training_size, runtimes_sklearn, label='sklearn')
+    axs[0].semilogy(training_size, runtimes_sequential_rff, label='sequential RFF')
+    axs[0].semilogy(training_size, runtimes_sklearn, label='sklearn')
     axs[0].set_xticks(training_size)
     axs[0].set_ylabel('runtime in seconds')
     axs[0].legend()

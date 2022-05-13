@@ -107,7 +107,7 @@ def two_dim_scatterplot(data, labels, path):
 
     x1, x2 = data[:, 0], data[:, 1]
     plt.figure(figsize=(10, 10))
-    plt.scatter(x1, x2, c=labels)
+    plt.scatter(x1, x2, c=labels, cmap='coolwarm')
     plt.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
     plt.tick_params(axis='y', which='both', left='off', top='off', labelleft='off')
     plt.xlabel(r"$x_1$", fontsize=14)
