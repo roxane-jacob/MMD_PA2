@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
+from svm import NonLinearFeatures
 
 
 def load_csv(path):
@@ -28,6 +29,23 @@ def gridsearch(method, X_train, X_test, y_train, y_test, lr_params, reg_params):
             y_pred, runtime, accuracy = method(X_train, X_test, y_train, y_test,
                                                learning_rate=lr, regularization=reg)
             params.append((lr, reg))
+            accuracies.append(accuracy)
+    max_accuracy_index = accuracies.index(max(accuracies))
+
+    return params[max_accuracy_index]
+
+
+def gridsearch_rff(method, X_train, X_test, y_train, y_test, lr, reg, m_params, sigma_params):
+    params = []
+    accuracies = []
+    for m in m_params:
+        for sigma in sigma_params:
+            nlf = NonLinearFeatures(m=m, sigma=sigma)
+            X_rff_train = nlf.fit_transform(X_train)
+            X_rff_test = nlf.transform(X_test)
+            y_pred, runtime, accuracy = method(X_rff_train, X_rff_test, y_train, y_test,
+                                               learning_rate=lr, regularization=reg)
+            params.append((m, sigma))
             accuracies.append(accuracy)
     max_accuracy_index = accuracies.index(max(accuracies))
 

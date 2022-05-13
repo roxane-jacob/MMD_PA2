@@ -5,7 +5,7 @@ import time
 
 from svm import NonLinearFeatures
 from runner_svm_models import sklearn_svc, sequential_svm, parallel_svm
-from utils import load_mnist, gridsearch
+from utils import load_mnist, gridsearch, gridsearch_rff
 
 
 def runner_mnist(path):
@@ -26,28 +26,33 @@ def runner_mnist(path):
     print("\nBaseline Accuracy: {}".format(dummy_clf.score(X_test, y_test)))
 
     # define learning rate and regularization parameter range for gridsearch:
-    lr_params = [1e2, 1e1, 1, 1e-1, 1e-2, 1e-3]
-    reg_params = [1e0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
+    lr_params = [1e1, 1, 1e-1, 1e-2, 1e-3, 1e-4]
+    reg_params = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6]
 
-    # run sequential linear svm
+    # run gridsearch on sequential linear svm
     print('\n--- Sequential Linear SVM ---')
     lr, reg = gridsearch(sequential_svm, X_train, X_test, y_train, y_test, lr_params, reg_params)
     print('Best learning rate: {}'.format(lr))
     print('Best regularization parameter: {}'.format(reg))
+
+    # run sequential linear svm with optimized learning rate and regularisation parameter
     _, runtime, accuracy = sequential_svm(X_train, X_test, y_train, y_test, lr, reg)
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
 
-    # run parallel linear svm
+    # run gridsearch on parallel linear svm with fixed number of 8 machines
     print('\n--- Parallel Linear SVM ---')
     lr, reg = gridsearch(parallel_svm, X_train, X_test, y_train, y_test, lr_params, reg_params)
     print('Best learning rate: {}'.format(lr))
     print('Best regularization parameter: {}'.format(reg))
+
+    # run parallel linear svm with optimized learning rate and regularisation parameter with fixed number of 8 machines
     _, runtime, accuracy = parallel_svm(X_train, X_test, y_train, y_test, lr, reg)
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
 
     # run parallel linear svm with increasing number of machines
+    # this run takes into account the learning rate and the regularisation parameter of the previous gridsearch
     print('Running parallel linear svm with increasing number of machines...')
     number_of_machines = [1, 2, 3, 4, 5, 6, 7, 8]
     parallel_runtimes = []
@@ -58,12 +63,13 @@ def runner_mnist(path):
         parallel_runtimes.append(runtime)
         parallel_accuracies.append(accuracy)
 
-    #X_train = X_train[:3000]
-    #X_test = X_test[:500]
-    #y_train = y_train[:3000]
-    #y_test = y_test[:500]
+    # Use a subset of the original sample space to reduce runtime of SVMs with rff features
+    X_train = X_train[:3000]
+    X_test = X_test[:500]
+    y_train = y_train[:3000]
+    y_test = y_test[:500]
 
-    # Create RFF features
+    # Create RFF features for the upcoming gridsearch procedure
     print('\n--- Compute RFF features ---')
     start = time.time()
     nlf = NonLinearFeatures(m=800, sigma=150)
@@ -72,27 +78,53 @@ def runner_mnist(path):
     end = time.time()
     print(f'Runtime transformation to RFF features: {end - start}')
 
-    # run sequential RFF svm
+    # run sequential RFF svm gridsearch to find optimal learning rate and regularisation parameter
     print('\n--- Sequential RFF SVM ---')
     lr_seq, reg_seq = gridsearch(sequential_svm, X_rff_train, X_rff_test, y_train, y_test, lr_params, reg_params)
     print('Best learning rate: {}'.format(lr_seq))
     print('Best regularization parameter: {}'.format(reg_seq))
+
+    # run sequential RFF svm with optimized learning rate and regularisation parameter
     _, runtime, accuracy = sequential_svm(X_rff_train, X_rff_test, y_train, y_test, lr_seq, reg_seq)
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
 
-    # run parallel RFF svm
+    # run gridsearch on RFF feature hyperparameters (m, sigma) with optimized learning rate and regularisation parameter
+    print('\n--- RFF Gridsearch ---')
+    m_params = [1000, 2000, 3000]
+    sigma_params = [1, 100, 150, 200, 1000]
+    m_seq, sigma_seq = gridsearch_rff(sequential_svm, X_train, X_test, y_train, y_test, lr_seq, reg_seq,  m_params, sigma_params)
+    print('Best feature dimension m: {}'.format(m_seq))
+    print('Best hyperparameter sigma: {}'.format(sigma_seq))
+
+    # Recalculate RFF features with optimized hyperparameters for the upcoming calculations
+    print('\n--- Recompute RFF features ---')
+    start = time.time()
+    nlf = NonLinearFeatures(m=m_seq, sigma=sigma_seq)
+    X_rff_train = nlf.fit_transform(X_train)
+    X_rff_test = nlf.transform(X_test)
+    end = time.time()
+    print(f'Runtime transformation to RFF features: {end - start}')
+
+    # run sequential RFF svm with optimized learning rate, regularisation parameter, feature dimension m, and sigma
+    print('\n--- Sequential RFF SVM with optimized parameters ---')
+    _, runtime, accuracy = sequential_svm(X_rff_train, X_rff_test, y_train, y_test, lr_seq, reg_seq)
+    print('Runtime with best parameters: {}'.format(runtime))
+    print('Accuracy with best parameters: {}'.format(accuracy))
+
+    # run gridsearch on parallel RFF svm
     print('\n--- Parallel RFF SVM ---')
     lr, reg = gridsearch(parallel_svm, X_rff_train, X_rff_test, y_train, y_test, lr_params, reg_params)
     print('Best learning rate: {}'.format(lr))
     print('Best regularization parameter: {}'.format(reg))
+
+    # run parallel RFF svm with optimized hyperparameters
     _, runtime, accuracy = parallel_svm(X_rff_train, X_rff_test, y_train, y_test, lr, reg)
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
 
     # make plots for runtime/performance comparison when training on 1000, 2000, 3000 training samples
     # and using own implementation vs. sklearn's svm.svc
-
     training_size = [1000, 2000, 3000]
     runtimes_sequential_rff = []
     accuracies_sequential_rff = []
