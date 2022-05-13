@@ -25,7 +25,7 @@ def runner_mnist(path):
     dummy_clf.fit(X_train, y_train)
     print("\nBaseline Accuracy: {}".format(dummy_clf.score(X_test, y_test)))
 
-    # define learning rate and regularization parameter range for gridsearch:
+    # define learning rate and regularization parameter range for gridsearch
     lr_params = [1e1, 1, 1e-1, 1e-2, 1e-3, 1e-4]
     reg_params = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6]
 
@@ -63,13 +63,13 @@ def runner_mnist(path):
         parallel_runtimes.append(runtime)
         parallel_accuracies.append(accuracy)
 
-    # Use a subset of the original sample space to reduce runtime of SVMs with rff features
+    # use a subset of the original sample space to reduce runtime of SVMs with rff features
     X_train = X_train[:3000]
     X_test = X_test[:500]
     y_train = y_train[:3000]
     y_test = y_test[:500]
 
-    # Create RFF features for the upcoming gridsearch procedure
+    # create RFF features for the upcoming gridsearch procedure
     print('\n--- Compute RFF features ---')
     start = time.time()
     nlf = NonLinearFeatures(m=1000, sigma=150)
@@ -93,7 +93,8 @@ def runner_mnist(path):
     print('\n--- RFF Gridsearch ---')
     m_params = [1000, 2000, 3000]
     sigma_params = [1, 100, 150, 200, 1000]
-    m_seq, sigma_seq = gridsearch_rff(sequential_svm, X_train, X_test, y_train, y_test, lr_seq, reg_seq,  m_params, sigma_params)
+    m_seq, sigma_seq = gridsearch_rff(sequential_svm, X_train, X_test, y_train, y_test, lr_seq, reg_seq,  m_params,
+                                      sigma_params)
     print('Best feature dimension m: {}'.format(m_seq))
     print('Best hyperparameter sigma: {}'.format(sigma_seq))
 
@@ -140,6 +141,7 @@ def runner_mnist(path):
         runtimes_sklearn.append(runtime)
         accuracies_sklearn.append(accuracy)
 
+    # plot runtime and accuracy versus the size of the training set
     fig, axs = plt.subplots(2, 1)
     axs[0].semilogy(training_size, runtimes_sequential_rff, label='sequential RFF')
     axs[0].semilogy(training_size, runtimes_sklearn, label='sklearn')

@@ -16,6 +16,7 @@ class SequentialSVM:
         self.sgd_progress = []
 
     def _init_weights(self, X):
+
         if self.multiclass:
             _, n_features = X.shape
             w = np.zeros((n_features, self.n_classes))

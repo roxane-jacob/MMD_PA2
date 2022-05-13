@@ -36,11 +36,19 @@ SDM_PA_Task1/
   - svm.py
   - utils.py
 
-data: 
-Contains the input data.
 
-output: 
-Contains the generated plots from the experiments.
+data: Contains the input data.
 
-utils.py: 
-Contains helper functions for data imports and plotting.
+output: Contains the generated plots from the experiments.
+
+main.py: Entry point of the project.
+
+runner_mnist.py: Experiments on the mnist dataset.
+
+runner_svm_models.py: Contains helper functions for the experiments.
+
+runner_toydata.py: Experiments in the tiny and large toy dataset.
+
+svm.py: Contains the implementation of the (parallelized) SVM class and the RFF Feature Class.
+
+utils.py: Contains helper functions for data imports and plotting.
