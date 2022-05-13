@@ -34,14 +34,19 @@ def gridsearch(method, X_train, X_test, y_train, y_test, lr_params, reg_params):
     return params[max_accuracy_index]
 
 
-def five_fold_cross_validation(method, X_train, X_test, y_train, y_test, lr, reg):
+def five_fold_cross_validation(method, X_train, X_test, y_train, y_test, lr, reg, num_threads=None):
     y_pred = None
     runtimes = []
     accuracies = []
 
     for _ in range(5):
-        y_pred, runtime, accuracy = method(X_train, X_test, y_train, y_test,
-                                           learning_rate=lr, regularization=reg)
+        if num_threads:
+            y_pred, runtime, accuracy = method(X_train, X_test, y_train, y_test,
+                                               learning_rate=lr, regularization=reg,
+                                               num_threads=num_threads)
+        else:
+            y_pred, runtime, accuracy = method(X_train, X_test, y_train, y_test,
+                                               learning_rate=lr, regularization=reg)
         accuracies.append(accuracy)
         runtimes.append(runtime)
 
@@ -90,3 +95,27 @@ def two_dim_scatterplot(data, labels, path):
     plt.xlabel(r"$x_1$", fontsize=14)
     plt.ylabel(r"$x_2$", fontsize=14)
     plt.savefig(path, dpi=150, format='png')
+
+
+def plot_parallel_runtimes(number_of_machines_tiny, number_of_machines_large, number_of_machines_mnist,
+                           parallel_runtimes_tiny, parallel_runtimes_large, parallel_runtimes_mnist, path):
+    plt.figure(figsize=(10, 10))
+    plt.plot(number_of_machines_tiny, parallel_runtimes_tiny)
+    plt.plot(number_of_machines_large, parallel_runtimes_large)
+    plt.plot(number_of_machines_mnist, parallel_runtimes_mnist)
+    plt.xlabel('Number of machines')
+    plt.ylabel('Runtime in seconds')
+    plt.legend(['tiny toydata', 'large toydata', 'MNIST'])
+    plt.savefig(path, dpi=150)
+
+
+def plot_parallel_accuracies(number_of_machines_tiny, number_of_machines_large, number_of_machines_mnist,
+                             parallel_accuracies_tiny, parallel_accuracies_large, parallel_accuracies_mnist, path):
+    plt.figure(figsize=(10, 10))
+    plt.plot(number_of_machines_tiny, parallel_accuracies_tiny)
+    plt.plot(number_of_machines_large, parallel_accuracies_large)
+    plt.plot(number_of_machines_mnist, parallel_accuracies_mnist)
+    plt.xlabel('Number of machines')
+    plt.ylabel('Accuracy')
+    plt.legend(['tiny toydata', 'large toydata', 'MNIST'])
+    plt.savefig(path, dpi=150)

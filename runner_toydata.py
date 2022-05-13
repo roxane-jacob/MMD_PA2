@@ -34,8 +34,8 @@ def runner_toydata(path, tiny):
     print(f"Accuracy: {accuracy_sklearn_svc}")
 
     # define learning rate and regularization parameter range for gridsearch:
-    lr_params = [1, 1e-1, 1e-2, 1e-3]
-    reg_params = [1, 1e-1, 1e-2, 1e-3]
+    lr_params = [1e2, 1e1, 1, 1e-1, 1e-2, 1e-3]
+    reg_params = [1e0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
 
     # run sequential linear svm
     print('\n--- Sequential Linear SVM ---')
@@ -48,7 +48,26 @@ def runner_toydata(path, tiny):
     print('Accuracy with best parameters: {}'.format(accuracy))
     sgd_progress_linear = sgd_progress(sequential_svm, X_train, X_test, y_train, y_test, lr, reg)
 
-    # ---------- Compute RFF Features ----------
+    # run parallel linear svm
+    print('\n--- Parallel Linear SVM ---')
+    lr, reg = gridsearch(parallel_svm, X_train, X_test, y_train, y_test, lr_params, reg_params)
+    print('Best learning rate: {}'.format(lr))
+    print('Best regularization parameter: {}'.format(reg))
+    y_pred_par_linear, runtime, accuracy = five_fold_cross_validation(parallel_svm, X_train, X_test,
+                                                                      y_train, y_test, lr, reg)
+    print('Runtime with best parameters: {}'.format(runtime))
+    print('Accuracy with best parameters: {}'.format(accuracy))
+
+    # run parallel linear svm with increasing number of machines
+    print('Running parallel linear svm with increasing number of machines...')
+    number_of_machines = [1, 2, 3, 4, 5, 6, 7, 8]
+    parallel_runtimes = []
+    parallel_accuracies = []
+    for num_threads in number_of_machines:
+        _, runtime, accuracy = five_fold_cross_validation(parallel_svm, X_train, X_test,
+                                                          y_train, y_test, lr, reg, num_threads)
+        parallel_runtimes.append(runtime)
+        parallel_accuracies.append(accuracy)
 
     # Create RFF features
     print('\n--- Compute RFF features ---')
@@ -71,16 +90,6 @@ def runner_toydata(path, tiny):
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
     sgd_progress_rff = sgd_progress(sequential_svm, X_rff_train, X_rff_test, y_train, y_test, lr, reg)
-
-    # run parallel linear svm
-    print('\n--- Parallel Linear SVM ---')
-    lr, reg = gridsearch(parallel_svm, X_train, X_test, y_train, y_test, lr_params, reg_params)
-    print('Best learning rate: {}'.format(lr))
-    print('Best regularization parameter: {}'.format(reg))
-    y_pred_par_linear, runtime, accuracy = five_fold_cross_validation(parallel_svm, X_train, X_test,
-                                                                      y_train, y_test, lr, reg)
-    print('Runtime with best parameters: {}'.format(runtime))
-    print('Accuracy with best parameters: {}'.format(accuracy))
 
     # run parallel RFF svm
     print('\n--- Parallel RFF SVM ---')
@@ -109,3 +118,5 @@ def runner_toydata(path, tiny):
 
     if not tiny:
         plot_sgd_convergence(sgd_progress_linear, sgd_progress_rff, 'output/sgd_progress_large.png')
+
+    return number_of_machines, parallel_runtimes, parallel_accuracies
