@@ -132,7 +132,7 @@ class SequentialSVM:
 
         if self.store_sgd_progress:
             for stored_w in self.stored_weights:
-                self.sgd_progress.append(np.linalg.norm(self.w - stored_w, ord=1) / np.linalg.norm(self.w))
+                self.sgd_progress.append(np.linalg.norm(self.w - stored_w, ord=1) / np.linalg.norm(self.w, ord=1))
 
     def runner(self, X, y):
         """
