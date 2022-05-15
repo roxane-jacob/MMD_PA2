@@ -57,7 +57,6 @@ def sequential_svm(X_train, X_test, y_train, y_test, learning_rate, regularizati
         store_sgd_progress : bool, optional
             If true, a list reporting the progress of the SGD solver is returned
 
-
         Returns
         -------
         y_predicted, runtime, accuracy : (ndarray of shape (n samples,), list(float), list(float))

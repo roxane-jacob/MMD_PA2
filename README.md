@@ -1,4 +1,4 @@
-13.05.2022
+15.05.2022
 
 Mining Massive Data
 Programming Assignment 2
@@ -47,8 +47,8 @@ runner_mnist.py: Experiments on the mnist dataset.
 
 runner_svm_models.py: Contains helper functions for the experiments.
 
-runner_toydata.py: Experiments in the tiny and large toy dataset.
+runner_toydata.py: Experiments on the tiny and large toy dataset.
 
-svm.py: Contains the implementation of the (parallelized) SVM class and the RFF Feature Class.
+svm.py: Contains the implementation of the (parallelized) SVM class and the NonLinearFeatures Class.
 
 utils.py: Contains helper functions for data imports and plotting.

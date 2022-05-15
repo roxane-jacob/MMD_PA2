@@ -10,7 +10,23 @@ from utils import load_csv, gridsearch, five_fold_cross_validation, \
 
 
 def runner_toydata(path, tiny):
+    """
+    Run experiments on the given toy datasets. There are two datasets, a tiny and a large one. The class labels are
+    either +1 or -1. The tiny toy dataset is of dimension (200, 2), the large one is of dimension (200000, 8).
 
+        Parameters
+        ----------
+        path : str
+            Path where the data is stored
+        tiny : bool
+            Specify, whether the tiny or large dataset is given. If true, some additional plots will be generated
+
+        Returns
+        -------
+        number_of_machines, parallel_runtimes, parallel_accuracies : list(int), list(float), list(float)
+            The runtimes and accuracies versus the number of machines are returned for further comparison of the
+            parallelization on the three different datasets
+    """
     print(f'\n---------- Running Procedure on {path} ----------')
 
     X, y = load_csv(path)

@@ -9,6 +9,22 @@ from utils import load_mnist, gridsearch, gridsearch_rff
 
 
 def runner_mnist(path):
+    """
+    Run experiments on the MNIST dataset. The MNIST dataset consist of 70000 images of handwritten digits of
+    dimension (28 x 28) with class labels from 0 to 9. The images are flattened into arrays of dimension (784,).
+    The training/test split of the data is 60000/10000.
+
+        Parameters
+        ----------
+        path : str
+            Path where the data is stored
+
+        Returns
+        -------
+        number_of_machines, parallel_runtimes, parallel_accuracies : list(int), list(float), list(float)
+            The runtimes and accuracies versus the number of machines are returned for further comparison of the
+            parallelization on the three different datasets
+    """
 
     print(f'\n---------- Running Procedure on {path} ----------')
 
