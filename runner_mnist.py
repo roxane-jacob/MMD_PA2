@@ -95,15 +95,7 @@ def runner_mnist(path):
     print(f'Runtime transformation to RFF features: {end - start}')
 
     # run sequential RFF svm gridsearch to find optimal learning rate and regularisation parameter
-    print('\n--- Sequential RFF SVM ---')
     lr_seq, reg_seq = gridsearch(sequential_svm, X_rff_train, X_rff_test, y_train, y_test, lr_params, reg_params)
-    print('Best learning rate: {}'.format(lr_seq))
-    print('Best regularization parameter: {}'.format(reg_seq))
-
-    # run sequential RFF svm with optimized learning rate and regularisation parameter
-    _, runtime, accuracy = sequential_svm(X_rff_train, X_rff_test, y_train, y_test, lr_seq, reg_seq)
-    print('Runtime with best parameters: {}'.format(runtime))
-    print('Accuracy with best parameters: {}'.format(accuracy))
 
     # run gridsearch on RFF feature hyperparameters (m, sigma) with optimized learning rate and regularisation parameter
     print('\n--- RFF Gridsearch ---')
@@ -124,7 +116,9 @@ def runner_mnist(path):
     print(f'Runtime transformation to RFF features: {end - start}')
 
     # run sequential RFF svm with optimized learning rate, regularisation parameter, feature dimension m, and sigma
-    print('\n--- Sequential RFF SVM with optimized parameters ---')
+    print('\n--- Sequential RFF SVM ---')
+    print('Best learning rate: {}'.format(lr_seq))
+    print('Best regularization parameter: {}'.format(reg_seq))
     _, runtime, accuracy = sequential_svm(X_rff_train, X_rff_test, y_train, y_test, lr_seq, reg_seq)
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
@@ -135,7 +129,7 @@ def runner_mnist(path):
     print('Best learning rate: {}'.format(lr))
     print('Best regularization parameter: {}'.format(reg))
 
-    # run parallel RFF svm with optimized hyperparameters
+    # run parallel RFF svm with optimized learning rate, regularisation parameter, feature dimension m, and sigma
     _, runtime, accuracy = parallel_svm(X_rff_train, X_rff_test, y_train, y_test, lr, reg)
     print('Runtime with best parameters: {}'.format(runtime))
     print('Accuracy with best parameters: {}'.format(accuracy))
@@ -162,14 +156,14 @@ def runner_mnist(path):
     axs[0].semilogy(training_size, runtimes_sequential_rff, label='sequential RFF')
     axs[0].semilogy(training_size, runtimes_sklearn, label='sklearn')
     axs[0].set_xticks(training_size)
-    axs[0].set_ylabel('runtime in seconds')
-    axs[0].legend()
+    axs[0].set_ylabel('runtime in seconds', fontsize=16)
+    axs[0].legend(fontsize=16)
     axs[1].plot(training_size, accuracies_sequential_rff, label='sequential RFF')
     axs[1].plot(training_size, accuracies_sklearn, label='sklearn')
     axs[1].set_xticks(training_size)
-    axs[1].set_xlabel('training set size')
-    axs[1].set_ylabel('accuracy')
-    axs[1].legend()
+    axs[1].set_xlabel('training set size', fontsize=16)
+    axs[1].set_ylabel('accuracy', fontsize=16)
+    axs[1].legend(fontsize=16)
     plt.savefig('output/mnist_sequential_rff_vs_sklearn.png', dpi=150)
 
     return number_of_machines, parallel_runtimes, parallel_accuracies
