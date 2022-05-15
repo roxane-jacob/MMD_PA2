@@ -1,6 +1,7 @@
 from sklearn.metrics import accuracy_score
 from sklearn.svm import SVC
 import time
+import ray
 
 from svm import SequentialSVM, ParallelSVM
 
@@ -80,7 +81,7 @@ def sequential_svm(X_train, X_test, y_train, y_test, learning_rate, regularizati
         return y_predicted, runtime, accuracy
 
 
-def parallel_svm(X_train, X_test, y_train, y_test, learning_rate, regularization, num_threads=8):
+def parallel_svm(X_train, X_test, y_train, y_test, learning_rate, regularization, num_threads=4):
     """
     Train the own parallel implementation of an SVC, predict labels, and calculate the accuracy on given test set.
 
@@ -111,7 +112,7 @@ def parallel_svm(X_train, X_test, y_train, y_test, learning_rate, regularization
     clf.fit(X_train, y_train)
     y_predicted = clf.predict(X_test)
     end = time.time()
-    runtime = (end - start) / num_threads
+    runtime = end - start
     accuracy = accuracy_score(y_test, y_predicted)
 
     return y_predicted, runtime, accuracy

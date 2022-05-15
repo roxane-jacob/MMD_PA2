@@ -53,8 +53,8 @@ def runner_mnist(path):
 
     # run sequential linear svm with optimized learning rate and regularisation parameter
     _, runtime, accuracy = sequential_svm(X_train, X_test, y_train, y_test, lr, reg)
-    print('Runtime with best parameters: {}'.format(runtime))
-    print('Accuracy with best parameters: {}'.format(accuracy))
+    print('Runtime with best parameters: {}'.format(round(runtime, 4)))
+    print('Accuracy with best parameters: {}'.format(round(accuracy, 4)))
 
     # run gridsearch on parallel linear svm with fixed number of 8 machines
     print('\n--- Parallel Linear SVM ---')
@@ -64,13 +64,13 @@ def runner_mnist(path):
 
     # run parallel linear svm with optimized learning rate and regularisation parameter with fixed number of 8 machines
     _, runtime, accuracy = parallel_svm(X_train, X_test, y_train, y_test, lr, reg)
-    print('Runtime with best parameters: {}'.format(runtime))
-    print('Accuracy with best parameters: {}'.format(accuracy))
+    print('Runtime with best parameters: {}'.format(round(runtime, 4)))
+    print('Accuracy with best parameters: {}'.format(round(accuracy, 4)))
 
     # run parallel linear svm with increasing number of machines
     # this run takes into account the learning rate and the regularisation parameter of the previous gridsearch
     print('Running parallel linear svm with increasing number of machines...')
-    number_of_machines = [1, 2, 3, 4, 5, 6, 7, 8]
+    number_of_machines = [1, 2, 3, 4]
     parallel_runtimes = []
     parallel_accuracies = []
     for num_threads in number_of_machines:
@@ -88,7 +88,7 @@ def runner_mnist(path):
     # create RFF features for the upcoming gridsearch procedure
     print('\n--- Compute RFF features ---')
     start = time.time()
-    nlf = NonLinearFeatures(m=1000, sigma=150)
+    nlf = NonLinearFeatures(m=1000, sigma=200)
     X_rff_train = nlf.fit_transform(X_train)
     X_rff_test = nlf.transform(X_test)
     end = time.time()
@@ -100,7 +100,7 @@ def runner_mnist(path):
     # run gridsearch on RFF feature hyperparameters (m, sigma) with optimized learning rate and regularisation parameter
     print('\n--- RFF Gridsearch ---')
     m_params = [1000, 2000, 3000]
-    sigma_params = [1, 100, 150, 200, 1000]
+    sigma_params = [1, 100, 200, 300, 1000]
     m_seq, sigma_seq = gridsearch_rff(sequential_svm, X_train, X_test, y_train, y_test, lr_seq, reg_seq,  m_params,
                                       sigma_params)
     print('Best feature dimension m: {}'.format(m_seq))
@@ -120,8 +120,8 @@ def runner_mnist(path):
     print('Best learning rate: {}'.format(lr_seq))
     print('Best regularization parameter: {}'.format(reg_seq))
     _, runtime, accuracy = sequential_svm(X_rff_train, X_rff_test, y_train, y_test, lr_seq, reg_seq)
-    print('Runtime with best parameters: {}'.format(runtime))
-    print('Accuracy with best parameters: {}'.format(accuracy))
+    print('Runtime with best parameters: {}'.format(round(runtime, 4)))
+    print('Accuracy with best parameters: {}'.format(round(accuracy, 4)))
 
     # run gridsearch on parallel RFF svm
     print('\n--- Parallel RFF SVM ---')
@@ -131,8 +131,8 @@ def runner_mnist(path):
 
     # run parallel RFF svm with optimized learning rate, regularisation parameter, feature dimension m, and sigma
     _, runtime, accuracy = parallel_svm(X_rff_train, X_rff_test, y_train, y_test, lr, reg)
-    print('Runtime with best parameters: {}'.format(runtime))
-    print('Accuracy with best parameters: {}'.format(accuracy))
+    print('Runtime with best parameters: {}'.format(round(runtime, 4)))
+    print('Accuracy with best parameters: {}'.format(round(accuracy, 4)))
 
     # make plots for runtime/performance comparison when training on 1000, 2000, 3000 training samples
     # and using own implementation vs. sklearn's svm.svc
@@ -157,13 +157,13 @@ def runner_mnist(path):
     axs[0].semilogy(training_size, runtimes_sklearn, label='sklearn')
     axs[0].set_xticks(training_size)
     axs[0].set_ylabel('runtime in seconds', fontsize=16)
-    axs[0].legend(fontsize=16)
+    axs[0].legend(fontsize=16, bbox_to_anchor=(1.02, 1))
     axs[1].plot(training_size, accuracies_sequential_rff, label='sequential RFF')
     axs[1].plot(training_size, accuracies_sklearn, label='sklearn')
     axs[1].set_xticks(training_size)
     axs[1].set_xlabel('training set size', fontsize=16)
     axs[1].set_ylabel('accuracy', fontsize=16)
-    axs[1].legend(fontsize=16)
-    plt.savefig('output/mnist_sequential_rff_vs_sklearn.png', dpi=150)
+    #axs[1].legend(fontsize=16, bbox_to_anchor=(1.04,1))
+    plt.savefig('output/mnist_sequential_rff_vs_sklearn.png', dpi=150, bbox_inches="tight")
 
     return number_of_machines, parallel_runtimes, parallel_accuracies

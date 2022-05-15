@@ -1,4 +1,5 @@
 import numpy as np
+import ray
 
 
 class SequentialSVM:
@@ -42,7 +43,8 @@ class SequentialSVM:
 
             Returns
             -------
-            w : ndarray of shape m (binary classification), or (m, c) (multiclass classification)
+            w : ndarray of shape (m features) (binary classification), or (m features, c classes) (multiclass
+                classification).
                 An initial array of the specific dimension containing zeros.
         """
         if self.multiclass:
@@ -65,16 +67,16 @@ class SequentialSVM:
             Parameters
             ----------
             x : ndarray of shape (m features,)
-                training sample
+                Training sample
             y : float
-                label of the training sample
+                Label of the training sample
             w : ndarray of shape (m features,) or (m features, c classes)
-                current weight vector
+                Current weight vector
 
             Returns
             -------
             w : ndarray of shape (m features,) or (m features, c classes)
-                the updated weight vector
+                The updated weight vector
         """
         if self.multiclass:
             val = 0
@@ -192,7 +194,8 @@ class SequentialSVM:
 
 
 class ParallelSVM(SequentialSVM):
-    def __init__(self, learning_rate=1e-3, regularization_parameter=1e-2, num_threads=8):
+
+    def __init__(self, learning_rate=1e-3, regularization_parameter=1e-2, num_threads=4):
         """
         Parallel version of the SVM classifier class. The class takes one additional argument, which is the number of
         threads for the parallel SGD optimizer.
@@ -207,14 +210,14 @@ class ParallelSVM(SequentialSVM):
                 Number of threads for the parallelization
         """
         SequentialSVM.__init__(self, learning_rate, regularization_parameter)
-        self.n_threads = num_threads
+        self.num_threads = num_threads
 
     def fit(self, X, y):
         """
         Fit the SVM classifier to the given training data. The parallelized SGD algorithm splits the given data into
         approximately equally sized subsets. The number of subsets equals the number of threads. The runner is called
-        on each of the subsets. The final weight vector is the average of multiple runner jobs. It is stored within the
-        class for further label prediction of given test data.
+        on each of the subsets. The final weight vector w is the average of multiple runner jobs. It is stored within
+        the class for further label prediction of given test data.
 
             Parameters
             ----------
@@ -239,17 +242,42 @@ class ParallelSVM(SequentialSVM):
         b = np.ones((n_samples, 1))
         X = np.concatenate((X, b), axis=1)
 
-        sample_to_thread = np.random.randint(0, self.n_threads, n_samples)
-        Xs = [X[sample_to_thread == i] for i in range(self.n_threads)]
-        ys = [y[sample_to_thread == i] for i in range(self.n_threads)]
+        sample_to_thread = np.random.randint(0, self.num_threads, n_samples)
+        Xs = [X[sample_to_thread == i] for i in range(self.num_threads)]
+        ys = [y[sample_to_thread == i] for i in range(self.num_threads)]
 
-        ws = []
-        for Xi, yi in zip(Xs, ys):
-            ws.append(self.runner(Xi, yi))
+        ws = ray.get([self.runner.remote(self, Xi, yi) for Xi, yi in zip(Xs, ys)])
 
-        #ws = Parallel(n_jobs=self.n_threads, backend='threading')(delayed(self.runner)(Xi, yi) for Xi, yi in zip(Xs, ys))
+        self.w = sum(ws) / self.num_threads  # compute w by taking the average of sub_ws
 
-        self.w = sum(ws) / self.n_threads  # compute w by taking the average of sub_ws
+    @ray.remote
+    def runner(self, X, y):
+        """
+        Run the SGD optimizer on the given training data and return a weight vector w, which determines the decision
+        boundary.
+
+            Parameters
+            ----------
+            X : ndarray of shape (n samples, m features)
+                Training data
+            y : ndarray of shape (n samples,)
+                Training data labels
+
+            Returns
+            -------
+            w : ndarray of shape (m features,) or (m features, c classes)
+                the weight vector of the decision boundary
+        """
+        w = self._init_weights(X)
+
+        if self.store_sgd_progress:
+            for idx, x in enumerate(X):
+                self.stored_weights.append(np.array(w))
+                w = self._update_weights(x, y[idx], w)
+        else:
+            for idx, x in enumerate(X):
+                w = self._update_weights(x, y[idx], w)
+        return w
 
 
 class NonLinearFeatures:

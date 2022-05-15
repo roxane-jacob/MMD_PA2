@@ -2,8 +2,12 @@ from runner_toydata import runner_toydata
 from runner_mnist import runner_mnist
 from utils import plot_parallel_runtimes, plot_parallel_accuracies
 
+import ray
+
 
 if __name__ == '__main__':
+    # initialize parallelization library
+    ray.init()
 
     # set paths
     toy_tiny = 'data/toydata_tiny.csv'
@@ -22,3 +26,6 @@ if __name__ == '__main__':
     plot_parallel_accuracies(number_of_machines_tiny, number_of_machines_large, number_of_machines_mnist,
                              parallel_accuracies_tiny, parallel_accuracies_large, parallel_accuracies_mnist,
                              'output/parallel_accuracies.png')
+
+    # close parallelization library
+    ray.shutdown()

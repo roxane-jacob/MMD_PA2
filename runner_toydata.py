@@ -60,8 +60,8 @@ def runner_toydata(path, tiny):
     print('Best regularization parameter: {}'.format(reg))
     y_pred_seq_linear, runtime, accuracy = five_fold_cross_validation(sequential_svm, X_train, X_test, y_train,
                                                                       y_test, lr, reg)
-    print('Runtime with best parameters: {}'.format(runtime))
-    print('Accuracy with best parameters: {}'.format(accuracy))
+    print('Runtime with best parameters: {}'.format(round(runtime, 4)))
+    print('Accuracy with best parameters: {}'.format(round(accuracy, 4)))
     sgd_progress_linear = sgd_progress(sequential_svm, X_train, X_test, y_train, y_test, lr, reg)
 
     # run parallel linear svm
@@ -71,12 +71,12 @@ def runner_toydata(path, tiny):
     print('Best regularization parameter: {}'.format(reg))
     y_pred_par_linear, runtime, accuracy = five_fold_cross_validation(parallel_svm, X_train, X_test,
                                                                       y_train, y_test, lr, reg)
-    print('Runtime with best parameters: {}'.format(runtime))
-    print('Accuracy with best parameters: {}'.format(accuracy))
+    print('Runtime with best parameters: {}'.format(round(runtime, 4)))
+    print('Accuracy with best parameters: {}'.format(round(accuracy, 4)))
 
     # run parallel linear svm with increasing number of machines
     print('Running parallel linear svm with increasing number of machines...')
-    number_of_machines = [1, 2, 3, 4, 5, 6, 7, 8]
+    number_of_machines = [1, 2, 3, 4]
     parallel_runtimes = []
     parallel_accuracies = []
     for num_threads in number_of_machines:
@@ -103,8 +103,8 @@ def runner_toydata(path, tiny):
     print('Best regularization parameter: {}'.format(reg))
     y_pred_seq_rff, runtime, accuracy = five_fold_cross_validation(sequential_svm, X_rff_train, X_rff_test,
                                                                    y_train, y_test, lr, reg)
-    print('Runtime with best parameters: {}'.format(runtime))
-    print('Accuracy with best parameters: {}'.format(accuracy))
+    print('Runtime with best parameters: {}'.format(round(runtime, 4)))
+    print('Accuracy with best parameters: {}'.format(round(accuracy, 4)))
     sgd_progress_rff = sgd_progress(sequential_svm, X_rff_train, X_rff_test, y_train, y_test, lr, reg)
 
     # run parallel RFF svm
@@ -115,8 +115,8 @@ def runner_toydata(path, tiny):
     y_pred_par_rff, runtime, accuracy = five_fold_cross_validation(parallel_svm, X_rff_train, X_rff_test,
                                                                    y_train, y_test, lr, reg)
 
-    print('Runtime with best parameters: {}'.format(runtime))
-    print('Accuracy with best parameters: {}'.format(accuracy))
+    print('Runtime with best parameters: {}'.format(round(runtime, 4)))
+    print('Accuracy with best parameters: {}'.format(round(accuracy, 4)))
 
     # ---------- Plot results ----------
 
