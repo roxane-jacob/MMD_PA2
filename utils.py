@@ -238,9 +238,9 @@ def plot_sgd_convergence(convergence_data_linear, convergence_data_rff, path):
     plt.figure(figsize=(10, 10))
     plt.plot(np.arange(1, len(convergence_data_linear)+1), convergence_data_linear, label='linear')
     plt.plot(np.arange(1, len(convergence_data_rff) + 1), convergence_data_rff, label='rff')
-    plt.xlabel('number of SGD epochs', fontsize=16)
-    plt.ylabel('SGD training error', fontsize=16)
-    plt.legend(fontsize=16)
+    plt.xlabel('number of SGD epochs', fontsize=14)
+    plt.ylabel('SGD training error', fontsize=14)
+    plt.legend(fontsize=14)
     plt.savefig(path, dpi=150)
 
 
@@ -267,8 +267,8 @@ def two_dim_scatterplot(data, labels, path):
     plt.scatter(x1, x2, c=labels, cmap='coolwarm')
     plt.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
     plt.tick_params(axis='y', which='both', left='off', top='off', labelleft='off')
-    plt.xlabel(r"$x_1$", fontsize=16)
-    plt.ylabel(r"$x_2$", fontsize=16)
+    plt.xlabel(r"$x_1$", fontsize=14)
+    plt.ylabel(r"$x_2$", fontsize=14)
     plt.savefig(path, dpi=150, format='png')
 
 
@@ -296,10 +296,10 @@ def plot_parallel_runtimes(number_of_machines_tiny, number_of_machines_large, nu
     plt.plot(number_of_machines_tiny, parallel_runtimes_tiny)
     plt.plot(number_of_machines_large, parallel_runtimes_large)
     plt.plot(number_of_machines_mnist, parallel_runtimes_mnist)
-    plt.xlabel('Number of machines', fontsize=16)
+    plt.xlabel('Number of machines', fontsize=14)
     plt.xticks(number_of_machines_tiny)
-    plt.ylabel('Runtime in seconds', fontsize=16)
-    plt.legend(['tiny toydata', 'large toydata', 'MNIST'], fontsize=16)
+    plt.ylabel('Runtime in seconds', fontsize=14)
+    plt.legend(['tiny toydata', 'large toydata', 'MNIST'], fontsize=14)
     plt.savefig(path, dpi=150)
 
 
@@ -327,8 +327,8 @@ def plot_parallel_accuracies(number_of_machines_tiny, number_of_machines_large, 
     plt.plot(number_of_machines_tiny, parallel_accuracies_tiny)
     plt.plot(number_of_machines_large, parallel_accuracies_large)
     plt.plot(number_of_machines_mnist, parallel_accuracies_mnist)
-    plt.xlabel('Number of machines', fontsize=16)
+    plt.xlabel('Number of machines', fontsize=14)
     plt.xticks(number_of_machines_tiny)
-    plt.ylabel('Accuracy', fontsize=16)
-    plt.legend(['tiny toydata', 'large toydata', 'MNIST'], fontsize=16)
+    plt.ylabel('Accuracy', fontsize=14)
+    plt.legend(['tiny toydata', 'large toydata', 'MNIST'], fontsize=14)
     plt.savefig(path, dpi=150)

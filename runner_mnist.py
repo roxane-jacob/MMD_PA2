@@ -100,7 +100,7 @@ def runner_mnist(path):
     # run gridsearch on RFF feature hyperparameters (m, sigma) with optimized learning rate and regularisation parameter
     print('\n--- RFF Gridsearch ---')
     m_params = [1000, 2000, 3000]
-    sigma_params = [1, 100, 200, 300, 1000]
+    sigma_params = [1, 100, 200, 300, 500, 1000]
     m_seq, sigma_seq = gridsearch_rff(sequential_svm, X_train, X_test, y_train, y_test, lr_seq, reg_seq,  m_params,
                                       sigma_params)
     print('Best feature dimension m: {}'.format(m_seq))
@@ -156,14 +156,13 @@ def runner_mnist(path):
     axs[0].semilogy(training_size, runtimes_sequential_rff, label='sequential RFF')
     axs[0].semilogy(training_size, runtimes_sklearn, label='sklearn')
     axs[0].set_xticks(training_size)
-    axs[0].set_ylabel('runtime in seconds', fontsize=16)
-    axs[0].legend(fontsize=16, bbox_to_anchor=(1.02, 1))
+    axs[0].set_ylabel('runtime in seconds', fontsize=14)
+    axs[0].legend(fontsize=14, bbox_to_anchor=(1.02, 1))
     axs[1].plot(training_size, accuracies_sequential_rff, label='sequential RFF')
     axs[1].plot(training_size, accuracies_sklearn, label='sklearn')
     axs[1].set_xticks(training_size)
-    axs[1].set_xlabel('training set size', fontsize=16)
-    axs[1].set_ylabel('accuracy', fontsize=16)
-    #axs[1].legend(fontsize=16, bbox_to_anchor=(1.04,1))
+    axs[1].set_xlabel('training set size', fontsize=14)
+    axs[1].set_ylabel('accuracy', fontsize=14)
     plt.savefig('output/mnist_sequential_rff_vs_sklearn.png', dpi=150, bbox_inches="tight")
 
     return number_of_machines, parallel_runtimes, parallel_accuracies
